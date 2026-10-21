@@ -1,12 +1,61 @@
 {
  "query": "CVE-2026-87491",
- "fetched_at": "2026-10-21T22:57:59.556Z",
+ "fetched_at": "2026-10-21T23:14:33.698Z",
  "providers": [
   "hn",
   "x"
  ],
- "failed": [
-  "x"
- ],
- "posts": []
+ "failed": [],
+ "posts": [
+  {
+   "source": "x",
+   "id": "2100595610453725411",
+   "author": "CyllexFramework",
+   "url": "https://x.com/CyllexFramework/status/2100595610453725411",
+   "created_at": "2026-09-17T14:39:55.000Z",
+   "lang": "en",
+   "score": 3,
+   "query": "CVE-2026-87491"
+  },
+  {
+   "source": "x",
+   "id": "2099507874569564480",
+   "author": "0xShekhar",
+   "url": "https://x.com/0xShekhar/status/2099507874569564480",
+   "created_at": "2026-09-14T14:37:38.000Z",
+   "lang": "en",
+   "score": 2,
+   "query": "CVE-2026-87491"
+  },
+  {
+   "source": "x",
+   "id": "2098749465234456648",
+   "author": "KelvinNjiro",
+   "url": "https://x.com/KelvinNjiro/status/2098749465234456648",
+   "created_at": "2026-09-12T12:24:00.000Z",
+   "lang": "en",
+   "score": 1,
+   "query": "CVE-2026-87491"
+  },
+  {
+   "source": "x",
+   "id": "2099341363321946454",
+   "author": "Sunil_kumawat17",
+   "url": "https://x.com/Sunil_kumawat17/status/2099341363321946454",
+   "created_at": "2026-09-14T03:35:59.000Z",
+   "lang": "en",
+   "score": 1,
+   "query": "CVE-2026-87491"
+  },
+  {
+   "source": "x",
+   "id": "2098216241760776321",
+   "author": "DFIR_Radar",
+   "url": "https://x.com/DFIR_Radar/status/2098216241760776321",
+   "created_at": "2026-09-11T01:05:09.000Z",
+   "lang": "en",
+   "score": 1,
+   "query": "CVE-2026-87491"
+  }
+ ]
 }
