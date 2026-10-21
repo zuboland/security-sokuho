@@ -287,6 +287,12 @@ function stable(obj) {
 
 export async function writeOutputs({ items, alerts, browsers, failed, generatedAt }) {
   await mkdir(PUBLIC_DIR, { recursive: true });
+  // 静的ページ（プライバシーポリシー等）は feed/static/ からそのまま配信に乗せる
+  const staticDir = path.join(here, '..', 'static');
+  try {
+    const { readdir, copyFile } = await import('node:fs/promises');
+    for (const f of await readdir(staticDir)) await copyFile(path.join(staticDir, f), path.join(PUBLIC_DIR, f));
+  } catch { /* static が無ければ何もしない */ }
   const schema = 1;
   await writeFile(path.join(PUBLIC_DIR, 'feed.json'), stable({ schema, window_days: WINDOW_DAYS, items }));
   await writeFile(path.join(PUBLIC_DIR, 'alerts.json'), stable({ schema, items: alerts }));

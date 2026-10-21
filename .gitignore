@@ -3,3 +3,4 @@ feed/public/
 docs/popup_required.png
 *.log
 .DS_Store
+dist/

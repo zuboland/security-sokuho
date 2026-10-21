@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>プライバシーポリシー — 緊急セキュリティ速報</title>
+<style>
+  body { margin: 0; background: #0B1220; color: #E6EAF2; font: 15px/1.8 "Hiragino Sans", "Yu Gothic UI", Meiryo, "Noto Sans JP", system-ui, sans-serif; letter-spacing: 0.01em; }
+  main { max-width: 720px; margin: 0 auto; padding: 48px 20px 64px; }
+  h1 { font-size: 24px; line-height: 1.4; margin: 0 0 8px; }
+  h2 { font-size: 17px; margin: 32px 0 8px; color: #fff; }
+  p, li { color: #C7CEDC; }
+  .muted { color: #6B7590; font-size: 13px; }
+  a { color: #E6EAF2; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid rgba(230,234,242,0.12); vertical-align: top; }
+  th { color: #A7B0C2; font-weight: 700; width: 36%; }
+</style>
+</head>
+<body>
+<main>
+  <h1>プライバシーポリシー — 緊急セキュリティ速報</h1>
+  <p class="muted">最終更新：2026-10-22 ／ 提供者：ZUBOLAND株式会社</p>
+
+  <h2>要点</h2>
+  <ul>
+    <li>この拡張は、<b>あなたの情報を収集・送信しません。</b>アカウント登録もありません</li>
+    <li>外へ出る通信は、公開フィード（静的JSON）の取得だけです。取得先は GitHub Pages（<code>https://zuboland.github.io/security-sokuho/</code>）で、利用者を識別する情報は付けません</li>
+    <li>ブラウザの版数の判定は、すべてあなたのブラウザの中で行います。版数が外に送られることはありません</li>
+  </ul>
+
+  <h2>この拡張が扱う情報</h2>
+  <table>
+    <tr><th>ブラウザの版数</th><td>あなたのブラウザから読み取り、公開フィードの「修正版の版数」と比べます。ブラウザの中だけで使い、保存は判定結果（要対応／対応不要／判定不能）とあわせて <code>chrome.storage</code>（お使いのブラウザ内）に置きます</td></tr>
+    <tr><th>通知の既読</th><td>同じ速報を2回鳴らさないために、鳴らした速報の ID をブラウザ内に保存します</td></tr>
+    <tr><th>設定</th><td>配信元URL・通知のオン／オフ。ブラウザの同期ストレージ（<code>chrome.storage.sync</code>）に保存され、あなたの Google アカウントで同期されることがあります。この拡張の提供者には届きません</td></tr>
+  </table>
+
+  <h2>収集しない情報</h2>
+  <p>閲覧履歴・開いているページの内容・入力した文字・Cookie・個人を特定できる情報は、読み取りも送信もしません。この拡張は <code>tabs</code> 権限や <code>host_permissions</code>（サイトへのアクセス権限）を持ちません。</p>
+
+  <h2>使う権限とその理由</h2>
+  <table>
+    <tr><th>alarms</th><td>30分ごとに公開フィードを確認するため</td></tr>
+    <tr><th>notifications</th><td>悪用が確認された脆弱性で、あなたのブラウザが影響を受けるときだけ通知するため</td></tr>
+    <tr><th>storage</th><td>判定結果・既読・設定をブラウザ内に保存するため</td></tr>
+  </table>
+
+  <h2>外部サービスへのリンク</h2>
+  <p>速報の一覧には、一次情報（Google・Microsoft・CISA・JPCERT/CC・IPA）や、関連する投稿（Hacker News・X）へのリンクが含まれます。リンクを開いたあとの取り扱いは、それぞれのサービスのポリシーに従います。この拡張がそれらのサービスにあなたの情報を送ることはありません。</p>
+
+  <h2>この速報が求めないこと</h2>
+  <p>この拡張が電話・ダウンロード・支払いを求めることはありません。電話番号やダウンロード先を表示する「警告」は、この拡張ではなく詐欺です。</p>
+
+  <h2>変更・お問い合わせ</h2>
+  <p>このポリシーを変えるときは、このページで知らせます。ソースコードは <a href="https://github.com/zuboland/security-sokuho">GitHub</a> で公開しています。お問い合わせは GitHub の Issues へどうぞ。</p>
+</main>
+</body>
+</html>
