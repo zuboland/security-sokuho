@@ -96,7 +96,11 @@ export async function loadCached(id) {
 export async function applySummaries(items, { provider = PROVIDER, maxPerRun = MAX_PER_RUN } = {}) {
   await mkdir(SUMMARY_DIR, { recursive: true });
   let calls = 0;
-  for (const item of items) {
+  // 速報（critical）→ high → info の順に呼ぶ（1回の上限に当たっても、人に見せる件から先に日本語になる。
+  // 2026-10-22 の初回は新しい順に20件回して、速報9件の要約が0件だった）
+  const rank = { critical: 0, high: 1, info: 2 };
+  const order = [...items].sort((a, b) => (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9));
+  for (const item of order) {
     const cached = await loadCached(item.id);
     if (cached && validateSummary(cached, item) === null) { Object.assign(item, pick(cached)); item.summary_by = cached.model || 'cache'; continue; }
     if (provider === 'none' || calls >= maxPerRun) continue;
