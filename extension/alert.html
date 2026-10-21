@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>緊急セキュリティ速報</title>
+<link rel="stylesheet" href="theme.css">
+<style>
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+  .stripe { flex: 0 0 auto; }
+  main { flex: 1; display: grid; grid-template-columns: minmax(120px, 220px) minmax(0, 720px); gap: 40px; padding: 48px 6vw 40px; align-items: start; justify-content: center; }
+  /* Signature：巨大な縦書きの日本語 */
+  /* 1列で読ませる（2列にすると右→左の順を知らない人に「速緊報急」と読まれる） */
+  .kanji { writing-mode: vertical-rl; text-orientation: upright; font: 900 clamp(56px, 8vw, 104px)/1 var(--font); letter-spacing: 0.06em; color: var(--tone); margin: 0; user-select: none; display: flex; gap: 16px; }
+  .kanji small { font: 700 14px/1 var(--mono); letter-spacing: 0.3em; color: var(--fg3); text-orientation: mixed; align-self: flex-start; padding-top: 4px; }
+  .eyebrow { display: flex; align-items: center; gap: 8px; color: var(--fg2); font-size: 13px; letter-spacing: 0.08em; line-height: 1.4; }
+  .eyebrow .time { font-family: var(--mono); margin-left: auto; color: var(--fg3); }
+  h1 { font: 900 clamp(26px, 3.6vw, 40px)/1.25 var(--font); margin: 8px 0 8px; letter-spacing: -0.01em; line-height: 1.25; }
+  .lead { font-size: 17px; color: var(--fg2); margin: 0 0 24px; line-height: 1.7; }
+  .lead b { color: var(--fg); }
+  .steps { margin: 24px 0 0; padding: 0; list-style: none; counter-reset: s; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 32px 1fr; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); align-items: baseline; }
+  .steps li::before { content: counter(s); font: 700 13px/24px var(--mono); width: 24px; height: 24px; text-align: center; border-radius: 50%; border: 1px solid var(--line); color: var(--fg2); }
+  .cta { margin: 24px 0 8px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .facts { margin-top: 32px; font-size: 13px; color: var(--fg2); }
+  .facts dt { color: var(--fg3); font-size: 11px; letter-spacing: 0.08em; margin-top: 8px; }
+  .facts dd { margin: 4px 0 0; }
+  footer { padding: 16px 6vw 28px; display: flex; gap: 16px; flex-wrap: wrap; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); color: var(--fg3); font-size: 12px; }
+  @media (max-width: 720px) { main { grid-template-columns: 1fr; padding: 28px 20px; } .kanji { writing-mode: horizontal-tb; font-size: 56px; } .kanji small { display: none; } }
+</style>
+</head>
+<body class="is-required">
+<div class="stripe" id="stripe"></div>
+<main class="enter">
+  <p class="kanji" id="kanji">緊急速報</p>
+  <section>
+    <div class="eyebrow"><span class="dot"></span><span id="eyebrow">緊急セキュリティ速報</span><span class="time mono" id="time"></span></div>
+    <h1 id="title">読み込み中…</h1>
+    <p class="lead" id="lead"></p>
+    <div class="vers" id="vers" hidden>
+      <div class="v"><span>今の版数</span><b id="v-now">—</b></div>
+      <div class="arrow">→</div>
+      <div class="v to"><span>この版数以上に</span><b id="v-safe">—</b></div>
+    </div>
+    <div class="cta">
+      <button class="btn" id="update">更新画面を開く</button>
+      <span class="tiny" id="after">開いた画面で更新が終わると「再起動」ボタンが出ます（約1分）</span>
+    </div>
+    <ol class="steps" id="steps"></ol>
+    <dl class="facts" id="facts"></dl>
+    <div class="promise" style="margin-top:32px">
+      <span>🛡</span>
+      <div><b>この速報が電話やダウンロードを求めることはありません。</b><br>更新はブラウザ自身の画面（設定 › 〜について）で行います。電話番号やダウンロード先が表示される「警告」は、この速報ではなく詐欺です。</div>
+    </div>
+  </section>
+</main>
+<footer>
+  <span>本物かどうか確かめる：ブラウザ右上の拡張アイコン（盾）に <b class="mono">!</b> が出ていれば、この画面はその拡張が開いたものです。</span>
+  <span id="sources"></span>
+</footer>
+<script type="module" src="alert.js"></script>
+</body>
+</html>

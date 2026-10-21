@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>緊急セキュリティ速報</title>
+<link rel="stylesheet" href="theme.css">
+<style>
+  body { width: 400px; }
+  header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 10px; }
+  header h1 { font: 800 15px/1 var(--font); margin: 0; letter-spacing: 0.02em; }
+  header .time { margin-left: auto; }
+  .status { padding: 16px 16px 18px; }
+  .status .big { font: 900 34px/1.1 var(--font); color: var(--tone); margin: 0 0 6px; letter-spacing: -0.01em; }
+  .status h2 { font: 700 17px/1.35 var(--font); margin: 0 0 6px; }
+  .status p { margin: 4px 0; color: var(--fg2); }
+  .status .btn { width: 100%; margin-top: 12px; }
+  section.list { padding: 4px 16px 10px; }
+  section.list h3 { font: 700 12px/1 var(--font); color: var(--fg3); letter-spacing: 0.08em; margin: 10px 0 4px; }
+  footer { padding: 10px 16px 14px; display: flex; gap: 10px; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); }
+  footer .ghost { background: none; border: 1px solid var(--line); color: var(--fg2); border-radius: 8px; padding: 6px 10px; cursor: pointer; font: 12px var(--font); }
+  footer .ghost:hover { color: var(--fg); }
+  footer .promise { border: 0; padding: 0; }
+</style>
+</head>
+<body class="is-unknown">
+<div class="stripe quiet" id="stripe"></div>
+<header>
+  <img src="icons/icon48.png" width="22" height="22" alt="">
+  <h1>緊急セキュリティ速報</h1>
+  <span class="tiny mono time" id="time"></span>
+</header>
+<div id="status" class="status enter"><h2>確認中…</h2></div>
+<section class="list">
+  <h3>直近の速報 ── 悪用が確認されたもの</h3>
+  <div id="alerts"><p class="tiny">読み込み中…</p></div>
+</section>
+<footer>
+  <div class="promise"><span>🛡</span><div><b>この速報が電話やダウンロードを求めることはありません</b></div></div>
+  <button id="recheck" class="ghost">再確認</button>
+</footer>
+<script type="module" src="popup.js"></script>
+</body>
+</html>

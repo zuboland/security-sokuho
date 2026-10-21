@@ -1,0 +1,17 @@
+{
+  "name": "secalert-feed",
+  "version": "0.1.0",
+  "private": true,
+  "description": "セキュリティ速報の公開フィード（静的JSON）を作る。AIなしで動く。",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node src/build.js",
+    "test": "node --test test/",
+    "selftest": "node src/selftest.js"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.11.2"
+  },
+  "_ai_note": "AI要約を使うときだけ追加で入れる: npm i @anthropic-ai/sdk （または openai）。入れなくても build は動く"
+}

@@ -1,0 +1,66 @@
+# 30分ごとに公開フィード（静的JSON）を作り直して GitHub Pages に配信する。
+# AI要約は SECALERT_AI を設定したときだけ動く（既定 none）。鍵は Secrets から。
+name: feed
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["feed/**", ".github/workflows/feed.yml"]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: feed
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 依存を入れる
+        run: npm ci --no-audit --no-fund
+        working-directory: feed
+      - name: 毒味（わざと壊した入力で落ちるか）
+        run: node src/selftest.js
+        working-directory: feed
+      - name: AI SDK（要約を使うときだけ）
+        if: ${{ vars.SECALERT_AI == 'anthropic' || vars.SECALERT_AI == 'openai' }}
+        run: npm i --no-save --no-audit --no-fund ${{ vars.SECALERT_AI == 'anthropic' && '@anthropic-ai/sdk' || 'openai' }}
+        working-directory: feed
+      - name: フィードを作る
+        run: node src/build.js
+        working-directory: feed
+        env:
+          SECALERT_AI: ${{ vars.SECALERT_AI || 'none' }}
+          SECALERT_AI_MODEL: ${{ vars.SECALERT_AI_MODEL }}
+          SECALERT_AI_MAX: ${{ vars.SECALERT_AI_MAX || '20' }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: 要約のキャッシュをコミット（リポジトリがキャッシュ＝フォークした人も日本語要約を持てる）
+        run: |
+          git config user.name "secalert-bot"
+          git config user.email "secalert-bot@users.noreply.github.com"
+          git add feed/data/summaries
+          git diff --cached --quiet || git commit -m "chore: 要約キャッシュを更新" && git push
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: feed/public
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

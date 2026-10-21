@@ -1,0 +1,13 @@
+{
+  "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json": "kev.json",
+  "https://chromereleases.googleblog.com/feeds/posts/default/-/Stable%20updates": "chromereleases.json",
+  "https://versionhistory.googleapis.com/v1/chrome/platforms/win/": "versionhistory_win.json",
+  "https://versionhistory.googleapis.com/v1/chrome/platforms/mac/": "versionhistory_mac.json",
+  "https://versionhistory.googleapis.com/v1/chrome/platforms/linux/": "versionhistory_linux.json",
+  "https://api.first.org/data/v1/epss": "epss.json",
+  "https://www.jpcert.or.jp/rss/jpcert.rdf": "jpcert.rdf",
+  "https://www.ipa.go.jp/security/alert-rss.rdf": "ipa.rdf",
+  "https://jvndb.jvn.jp/myjvn": "jvn_maintenance.html",
+  "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-relnotes-security": "edge.html",
+  "https://hn.algolia.com/api/v1/search": "hn_empty.json"
+}
