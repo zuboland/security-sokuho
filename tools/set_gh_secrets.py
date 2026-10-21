@@ -16,8 +16,17 @@ ap.add_argument("--anthropic-profile", default=None)
 ap.add_argument("--x-profile", default=None)
 ap.add_argument("--x-key-name", default="X_API_KEY")
 ap.add_argument("--x-secret-name", default="X_API_SECRET")
+ap.add_argument("--x-from-xurl", action="store_true", help="~/.xurl/auth.yml の default アプリの client_id/secret から app-only bearer を取る")
 ap.add_argument("--social", default="hn")
 a = ap.parse_args()
+
+
+def xurl_app_creds():
+    import yaml  # noqa: WPS433
+    p = os.path.join(os.path.expanduser("~"), ".xurl", "auth.yml")
+    d = yaml.safe_load(open(p, encoding="utf-8"))
+    app = d["apps"][d.get("default_app", "default")]
+    return app.get("client_id"), app.get("client_secret")
 
 
 def gh_secret(name, value):
@@ -40,9 +49,12 @@ if a.anthropic_profile:
     gh_var("SECALERT_AI_MODEL", "claude-opus-5-5")
     gh_var("SECALERT_AI_MAX", "20")
 
-if a.x_profile:
-    load(a.x_profile, only=[a.x_key_name, a.x_secret_name])
-    k, s = os.environ.get(a.x_key_name), os.environ.get(a.x_secret_name)
+if a.x_profile or a.x_from_xurl:
+    if a.x_from_xurl:
+        k, s = xurl_app_creds()
+    else:
+        load(a.x_profile, only=[a.x_key_name, a.x_secret_name])
+        k, s = os.environ.get(a.x_key_name), os.environ.get(a.x_secret_name)
     if not (k and s):
         print("X の API キー／シークレットが profile に無い"); sys.exit(1)
     basic = base64.b64encode(f"{k}:{s}".encode()).decode()
