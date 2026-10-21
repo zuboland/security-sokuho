@@ -17,6 +17,7 @@ ap.add_argument("--x-profile", default=None)
 ap.add_argument("--x-key-name", default="X_API_KEY")
 ap.add_argument("--x-secret-name", default="X_API_SECRET")
 ap.add_argument("--x-from-xurl", action="store_true", help="~/.xurl/auth.yml の default アプリの client_id/secret から app-only bearer を取る")
+ap.add_argument("--x-env-file", default=None, help="X_API_KEY/X_API_SECRET が書かれた env ファイルのパス（profile に無いとき）")
 ap.add_argument("--social", default="hn")
 a = ap.parse_args()
 
@@ -49,9 +50,24 @@ if a.anthropic_profile:
     gh_var("SECALERT_AI_MODEL", "claude-opus-5-5")
     gh_var("SECALERT_AI_MAX", "20")
 
-if a.x_profile or a.x_from_xurl:
+def read_env_file(path, names):
+    out = {}
+    for line in open(path, encoding="utf-8"):
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, val = line.split("=", 1)
+        if key.strip() in names:
+            out[key.strip()] = val.strip().strip('"').strip("'")
+    return out
+
+
+if a.x_profile or a.x_from_xurl or a.x_env_file:
     if a.x_from_xurl:
         k, s = xurl_app_creds()
+    elif a.x_env_file:
+        d = read_env_file(a.x_env_file, {a.x_key_name, a.x_secret_name})
+        k, s = d.get(a.x_key_name), d.get(a.x_secret_name)
     else:
         load(a.x_profile, only=[a.x_key_name, a.x_secret_name])
         k, s = os.environ.get(a.x_key_name), os.environ.get(a.x_secret_name)
