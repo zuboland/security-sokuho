@@ -18,7 +18,15 @@ const PROVIDERS = (process.env.SECALERT_SOCIAL || 'hn').split(',').map((s) => s.
 const MAX_PER_ITEM = 5;
 
 export const hnUrl = (q) => `https://hn.algolia.com/api/v1/search?query=${encodeURIComponent(q)}&tags=story&hitsPerPage=5`;
-export const xUrl = (q) => `https://api.x.com/2/tweets/search/recent?query=${encodeURIComponent(q)}&max_results=10&tweet.fields=created_at,lang,public_metrics&expansions=author_id&user.fields=username`;
+// 🚨 recent（直近7日）だと、発表から日が経った速報には何も付かない（2026-10-22 実測＝速報9件で X 0件）。
+//    pay-per-use では全期間検索（search/all）が使えるので、発表日から14日の範囲で探す
+export const xUrl = (q, { start = null, end = null, all = true } = {}) => {
+  const base = all ? 'https://api.x.com/2/tweets/search/all' : 'https://api.x.com/2/tweets/search/recent';
+  const p = new URLSearchParams({ query: q, max_results: '10', 'tweet.fields': 'created_at,lang,public_metrics', expansions: 'author_id', 'user.fields': 'username', sort_order: 'relevancy' });
+  if (all && start) p.set('start_time', start);
+  if (all && end) p.set('end_time', end);
+  return `${base}?${p.toString()}`;
+};
 
 /** 検索語：悪用確認済みの CVE があればそれ、無ければ最初の CVE、無ければ製品名 */
 export function queryFor(item) {
@@ -70,12 +78,27 @@ async function fetchHn(q) {
   return parseHn(await fetchJson(hnUrl(q)), q);
 }
 
-async function fetchX(q) {
+export function xWindow(published) {
+  if (!published) return { start: null, end: null };
+  const d = new Date(published);
+  if (Number.isNaN(d.getTime())) return { start: null, end: null };
+  const start = new Date(d.getTime() - 86400000);
+  const end = new Date(Math.min(d.getTime() + 14 * 86400000, Date.now() - 30000)); // end_time は現在より前でないと 400
+  return { start: start.toISOString(), end: end.toISOString() };
+}
+
+async function fetchX(q, published) {
   const token = process.env.X_BEARER_TOKEN;
   if (!token) return [];
-  // リポストを除く。日本語と英語
-  const json = await fetchJson(xUrl(`"${q}" -is:retweet (lang:ja OR lang:en)`), { headers: { authorization: `Bearer ${token}` } });
-  return parseX(json, q);
+  const query = `"${q}" -is:retweet (lang:ja OR lang:en)`; // リポストを除く。日本語と英語
+  const headers = { authorization: `Bearer ${token}` };
+  try {
+    return parseX(await fetchJson(xUrl(query, xWindow(published)), { headers, retries: 0 }), q);
+  } catch (e) {
+    // 全期間検索が使えない契約（403）なら直近7日で代用
+    if (!/HTTP 403/.test(e.message)) throw e;
+    return parseX(await fetchJson(xUrl(query, { all: false }), { headers, retries: 0 }), q);
+  }
 }
 
 async function loadCached(id) {
@@ -90,24 +113,30 @@ export async function attachPosts(items, { providers = PROVIDERS, maxCalls = Num
     item.related_posts = item.related_posts || [];
     if (item.severity !== 'critical') continue;
     const cached = await loadCached(item.id);
-    if (cached) { item.related_posts = cached.posts; continue; }
-    if (calls >= maxCalls) continue;
+    // 前回失敗した情報源（X の 402 など）が今回も有効なら取り直す。それ以外はキャッシュを使う
+    const retry = cached ? (cached.failed || []).filter((p) => providers.includes(p)) : [];
+    const missing = cached ? providers.filter((p) => !(cached.providers || []).includes(p)) : [];
+    const todo = cached ? [...new Set([...retry, ...missing])] : providers;
+    if (cached && todo.length === 0) { item.related_posts = cached.posts; continue; }
+    if (calls >= maxCalls) { if (cached) item.related_posts = cached.posts; continue; }
     const q = queryFor(item);
     if (!q) continue;
     calls++;
-    const posts = [];
-    for (const p of providers) {
+    const posts = cached ? (cached.posts || []).filter((p) => !todo.includes(p.source)) : [];
+    const failed = [];
+    for (const p of todo) {
       try {
         if (p === 'hn') posts.push(...(await fetchHn(q)));
-        else if (p === 'x') posts.push(...(await fetchX(q)));
+        else if (p === 'x') posts.push(...(await fetchX(q, item.published)));
       } catch (e) {
+        failed.push(p);
         console.warn(`[social] ${p} ${item.id}: ${e.message}`);
       }
     }
     posts.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
     item.related_posts = posts.slice(0, MAX_PER_ITEM);
-    // 何も見つからなくても保存する（毎回同じ検索を繰り返さない。X は有料）
-    await writeFile(path.join(POSTS_DIR, `${item.id}.json`), JSON.stringify({ query: q, fetched_at: new Date().toISOString(), posts: item.related_posts }, null, 1) + '\n');
+    // 何も見つからなくても保存する（毎回同じ検索を繰り返さない。X は有料）。失敗した情報源は記録して次回だけ取り直す
+    await writeFile(path.join(POSTS_DIR, `${item.id}.json`), JSON.stringify({ query: q, fetched_at: new Date().toISOString(), providers, failed, posts: item.related_posts }, null, 1) + '\n');
   }
   return items;
 }

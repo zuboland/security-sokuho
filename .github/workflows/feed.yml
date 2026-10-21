@@ -46,12 +46,14 @@ jobs:
           SECALERT_AI_MAX: ${{ vars.SECALERT_AI_MAX || '20' }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      - name: 要約のキャッシュをコミット（リポジトリがキャッシュ＝フォークした人も日本語要約を持てる）
+          SECALERT_SOCIAL: ${{ vars.SECALERT_SOCIAL || 'hn' }}
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+      - name: 要約と関連ポストのキャッシュをコミット（リポジトリがキャッシュ＝フォークした人も日本語要約を持てる・X は1件1回だけ）
         run: |
           git config user.name "secalert-bot"
           git config user.email "secalert-bot@users.noreply.github.com"
-          git add feed/data/summaries
-          git diff --cached --quiet || git commit -m "chore: 要約キャッシュを更新" && git push
+          git add feed/data/summaries feed/data/posts
+          git diff --cached --quiet || git commit -m "chore: 要約・関連ポストのキャッシュを更新" && git push
       - uses: actions/upload-pages-artifact@v3
         with:
           path: feed/public
