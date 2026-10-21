@@ -1,0 +1,7 @@
+{
+ "summary_ja": "Google Chrome の安全上の問題11件を直す更新が公開されました。現時点で、これらの問題を悪用した攻撃は確認されていません。",
+ "who_ja": "パソコン（Windows・Mac・Linux）で Google Chrome を使っている方が対象です。",
+ "action_ja": "Chrome の右上の「︙」から「ヘルプ」→「Google Chrome について」を開き、更新が終わったら「再起動」を押して、154.0.8037.97 以上にしておきましょう（1分ほどで終わります）。",
+ "model": "claude-opus-5-5",
+ "created_at": "2026-10-21T23:28:17.488Z"
+}
