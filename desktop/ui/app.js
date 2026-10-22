@@ -20,17 +20,18 @@ async function fetchJson(name) {
 }
 
 let busy = false;
+let lastUpgradeLog = null; // {id, text, at}
 async function check() {
   if (busy) return; busy = true;
   setStatus('確認中…');
   try {
-    const [feed, affected, catalog, wl, reg, os] = await Promise.all([
-      fetchJson('feed.json'), fetchJson('affected.json'), fetchJson('catalog.json'),
+    const [feed, affected, catalog, browsers, wl, reg, os] = await Promise.all([
+      fetchJson('feed.json'), fetchJson('affected.json'), fetchJson('catalog.json'), fetchJson('browsers.json'),
       invoke('winget_list'), invoke('registry_apps'), invoke('os_info'),
     ]);
     const parsed = parseWingetList(wl.stdout);
-    const installed = [...parsed.items, ...reg]; // winget が主・レジストリは保険（同じ物が2回出ても matchInstalled は最初の版数を使う）
-    const result = judge({ installed, catalog, affected, feed });
+    const installed = [...parsed.items, ...reg]; // winget が主・レジストリは保険（同じ物が2回出たら judge がいちばん新しい版数を採る）
+    const result = judge({ installed, catalog, affected, feed, browsers });
     const state = { checked_at: new Date().toISOString(), winget_ok: parsed.ok && wl.ok, winget_error: wl.ok ? null : (wl.stderr || `exit ${wl.code}`), os, result, alerts: (feed.items || []).filter((i) => i.severity === 'critical').slice(0, 10), catalog_count: catalog.products.length };
     localStorage.setItem('state', JSON.stringify(state));
     render(state);
@@ -65,6 +66,11 @@ function render(state, error = null) {
   $('time').textContent = new Date(state.checked_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) + ' 確認';
   $('grid').innerHTML = result.products.map(cardHtml).join('') || '<p class="muted">対応表にある製品がこのPCに見つかりませんでした。</p>';
   for (const b of document.querySelectorAll('[data-upgrade]')) b.addEventListener('click', () => upgrade(b.dataset.upgrade, b));
+  if (lastUpgradeLog) {
+    const p = result.products.find((x) => x.update?.id === lastUpgradeLog.id);
+    const el = p && document.getElementById(`log-${p.key}`);
+    if (el) { el.hidden = false; el.textContent = lastUpgradeLog.text + (p.verdict === 'required' ? '\n→ まだ修正版に届いていません。' : '\n→ 再確認しました（上の版数が今の状態）。'); }
+  }
   for (const b of document.querySelectorAll('[data-open]')) b.addEventListener('click', () => invoke('open_external', { url: b.dataset.open }));
   if (state.os?.build) { $('os').hidden = false; $('osver').textContent = `${state.os.product} ${state.os.display_version} (ビルド ${state.os.build}.${state.os.ubr})`; }
   $('watch').textContent = `対応表 ${state.catalog_count} 製品／このPCで見つかった ${s.watched} 件：` + result.products.map((p) => `${p.label} ${p.version || '?'}`).join('、');
@@ -90,18 +96,32 @@ function cardHtml(p) {
 }
 
 async function upgrade(id, button) {
-  button.disabled = true; button.textContent = '更新しています…（1〜3分）';
-  const log = button.parentElement.querySelector('.log'); log.hidden = false; log.textContent = `winget upgrade --id ${id}\n`;
+  if (button.dataset.busy) return; // 二重押し防止
+  button.dataset.busy = '1';
+  button.disabled = true; button.textContent = '更新しています…（1〜3分。Windows の確認画面が出たら「はい」）';
+  const log = button.parentElement.querySelector('.log'); log.hidden = false;
+  log.textContent = `winget upgrade --id ${id}\n管理者権限が要るソフトでは Windows の「このアプリがデバイスに変更を加えることを許可しますか？」が出ます。「はい」で続き、「いいえ」なら更新は行われません。\n`;
+  // 🚨 UAC を放置すると winget が終わらない（2026-10-22 実測＝VLC で consent.exe 待ちのまま6分超）。10分で「止まっています」を出して押し直せるようにする
+  const stuck = setTimeout(() => { button.textContent = 'Windows の確認で止まっています（画面の確認ダイアログを見てください）'; }, 10 * 60 * 1000);
   try {
     const r = await invoke('winget_upgrade', { id });
-    log.textContent += (r.stdout || '') + (r.stderr || '') + `\n(exit ${r.code})\n`;
+    clearTimeout(stuck);
+    log.textContent += stripControl((r.stdout || '') + (r.stderr || '')) + `\n(exit ${r.code})\n`;
+    // 再描画で消えないように、直近の更新ログは state と別に持つ（render が差し込む）
+    lastUpgradeLog = { id, text: log.textContent, at: new Date().toISOString() };
     // 🚨 終了値だけで「完了」と言わない。もう一度一覧を取って版数が上がったかを実測する
     button.textContent = '結果を確かめています…';
     await check();
   } catch (e) {
+    clearTimeout(stuck);
     log.textContent += `失敗: ${e}\n`;
-    button.disabled = false; button.textContent = 'もう一度試す';
+    button.disabled = false; button.textContent = 'もう一度試す'; delete button.dataset.busy;
   }
+}
+
+/** winget の進捗バー（制御文字・CR の上書き）を落として読める形にする */
+function stripControl(s) {
+  return String(s).replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '').replace(/\r(?!\n)/g, '\n').replace(/[▒█ ]{6,}/g, ' ').replace(/\n{3,}/g, '\n\n');
 }
 
 async function notifyIfNeeded(state) {

@@ -36,22 +36,39 @@ export function inRange(version, r) {
  * @param {object} o.feed      feed.json（items）
  * @returns {{products: Array, summary: object}}
  */
-export function judge({ installed, catalog, affected, feed }) {
+export function judge({ installed, catalog, affected, feed, browsers = null }) {
   const cveMap = affected?.cves || {};
   const products = [];
   for (const p of catalog.products) {
     const hits = matchInstalled(p, installed);
     if (hits.length === 0) continue; // 入っていない物は出さない
     const cpes = new Set(p.cpe.map((s) => s.toLowerCase()));
-    const rawVersion = hits.map((h) => h.version).find(Boolean) || null;
-    const version = normalizeVersion(rawVersion);
+    // 同じ製品が winget とレジストリの両方に出るとき、いちばん新しい版数を採る
+    // （2026-10-22 実測＝Claude デスクトップが winget 1.52386.0.0 とレジストリ 1.0 の2行。先頭を採ると偽の要対応になる）
+    let rawVersion = null; let version = null;
+    for (const h of hits) {
+      const v = normalizeVersion(h.version);
+      if (!v || !parseVersion(v)) continue;
+      if (!version || compareVersions(v, version) > 0) { version = v; rawVersion = h.version; }
+    }
+    if (!rawVersion) rawVersion = hits.map((h) => h.version).find(Boolean) || null;
     const findings = [];
+    // ブラウザは拡張と同じ材料（browsers.json の min_safe）でも判定する。NVD の CPE が Chrome だけで Edge に付かない件があるため
+    const bkey = p.key === 'chrome' ? 'chrome' : p.key === 'edge' ? 'edge' : null;
+    const b = bkey ? browsers?.[bkey] : null;
+    if (b && b.status === 'ok' && b.min_safe) {
+      const c = version ? compareVersions(version, b.min_safe) : null;
+      const verdict = c === null ? 'unknown' : c < 0 ? 'required' : 'ok';
+      const item = (feed.items || []).find((i) => i.id === b.alert_id) || null;
+      findings.push({ item_id: b.alert_id || `${bkey}-min_safe`, title: item?.title_ja || item?.title || `${p.label} の悪用確認済み脆弱性`, exploited: true, severity: 'critical', verdict, fixed: [b.min_safe], cves: b.exploited_cves || [], action_ja: item?.action_ja || '', advice_ja: item?.advice_ja || [], summary_ja: item?.summary_ja || null, sources: item?.sources || [], from: 'browsers' });
+    }
     for (const item of feed.items || []) {
       if (item.severity === 'info') continue;
       const cves = item.exploited_cves?.length ? item.exploited_cves : item.cves.slice(0, 3);
       const ranges = cves.flatMap((c) => (cveMap[c]?.ranges || []).map((r) => ({ ...r, cve: c })))
         .filter((r) => cpes.has(`${r.vendor}:${r.product}`.toLowerCase()));
       if (ranges.length === 0) continue;
+      if (findings.some((f) => f.item_id === item.id)) continue; // browsers.json で既に見た件
       let verdict;
       if (!version || !parseVersion(version)) verdict = 'unknown';
       else {

@@ -63,6 +63,19 @@ test('判定：版数が読めなければ unknown、古い版なら required', 
   assert.equal(p.verdict, 'required'); assert.deepEqual(p.findings[0].fixed, ['153.0.8010.36']);
 });
 
+test('判定：同じ製品が2行（winget とレジストリ）なら新しい版数を採る・browsers.json で Edge も判定する', () => {
+  const installed = [
+    { kind: 'winget', id: 'Anthropic.Claude', name: 'Claude', version: '1.52386.0.0', available: null },
+    { kind: 'arp', id: 'ARP\\User\\X64\\Claude', name: 'Claude', version: '1.0', available: null },
+    { kind: 'winget', id: 'Microsoft.Edge', name: 'Microsoft Edge', version: '150.0.1.1', available: null },
+  ];
+  const browsers = { edge: { status: 'ok', min_safe: '152.0.4191.66', exploited_cves: ['CVE-2026-87491'], alert_id: 'chrome-153.0.8010.36' }, chrome: { status: 'ok', min_safe: null } };
+  const r = judge({ installed, catalog, affected, feed, browsers });
+  assert.equal(r.products.find((p) => p.key === 'claude_desktop').version, '1.52386.0.0');
+  const edge = r.products.find((p) => p.key === 'edge');
+  assert.equal(edge.verdict, 'required'); assert.ok(edge.notify); assert.equal(edge.findings[0].from, 'browsers');
+});
+
 test('範囲の比較：境界と「範囲なし」', () => {
   assert.equal(inRange('1.0.0', { end_excl: '1.0.0' }), false);
   assert.equal(inRange('0.9.9', { end_excl: '1.0.0' }), true);
