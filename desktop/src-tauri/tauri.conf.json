@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "緊急セキュリティ速報",
+  "version": "0.1.0",
+  "identifier": "jp.zuboland.security-sokuho",
+  "build": {
+    "frontendDist": "../ui"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "緊急セキュリティ速報",
+        "width": 960,
+        "height": 720,
+        "minWidth": 720,
+        "minHeight": 520,
+        "visible": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' https://zuboland.github.io https://*.github.io ipc: http://ipc.localhost; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "createUpdaterArtifacts": false,
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "category": "Utility",
+    "shortDescription": "悪用が確認された脆弱性で、あなたのPCのソフトが影響を受けるときだけ知らせる常駐アプリ",
+    "longDescription": "公開フィード（Google／Microsoft／CISA／NVD の公式データ）と、PC に入っているソフトの版数をPCの中で比べ、要対応のときだけ通知します。PC の中身は外に送りません。",
+    "copyright": "© 2026 ZUBOLAND Inc.",
+    "publisher": "ZUBOLAND株式会社",
+    "homepage": "https://github.com/zuboland/security-sokuho",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false,
+        "languages": ["Japanese", "English"]
+      },
+      "signCommand": { "cmd": "node", "args": ["../scripts/sign-windows.mjs", "%1"] }
+    }
+  }
+}

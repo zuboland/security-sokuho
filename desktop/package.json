@@ -1,0 +1,17 @@
+{
+  "name": "security-sokuho-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "緊急セキュリティ速報 デスクトップ — PCに入っているソフトを公開フィードと照合し、要対応だけ知らせる常駐アプリ（Windows）",
+  "type": "module",
+  "scripts": {
+    "sync": "node scripts/sync-shared.mjs",
+    "test": "node --test test/",
+    "dev": "npm run sync && tauri dev",
+    "build": "npm run sync && tauri build",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.0"
+  }
+}

@@ -5,7 +5,9 @@
 <title>緊急セキュリティ速報</title>
 <link rel="stylesheet" href="theme.css">
 <style>
-  body { width: 400px; }
+  /* 縦スクロールバーが出ると幅が17px減って横スクロールが出るので、横は常に隠す */
+  html { overflow-x: hidden; }
+  body { width: 400px; overflow-x: hidden; }
   header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 10px; }
   header h1 { font: 800 15px/1 var(--font); margin: 0; letter-spacing: 0.02em; }
   header .time { margin-left: auto; }

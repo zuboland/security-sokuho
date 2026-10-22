@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>緊急セキュリティ速報</title>
+<link rel="stylesheet" href="shared/theme.css">
+<style>
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; gap: 12px; padding: 16px 24px 12px; border-bottom: 1px solid var(--line); }
+  header h1 { font: 800 16px/1 var(--font); margin: 0; letter-spacing: 0.02em; }
+  header .time { margin-left: auto; }
+  header button { background: none; border: 1px solid var(--line); color: var(--fg2); border-radius: 8px; padding: 8px 12px; cursor: pointer; font: 12px var(--font); }
+  header button:hover { color: var(--fg); }
+  main { flex: 1; padding: 16px 24px 24px; max-width: 1100px; width: 100%; margin: 0 auto; }
+  .hero { display: grid; grid-template-columns: 140px 1fr; gap: 24px; align-items: center; padding: 16px 0 8px; }
+  .kanji { writing-mode: vertical-rl; text-orientation: upright; font: 900 44px/1 var(--font); letter-spacing: 0.06em; color: var(--tone); margin: 0; justify-self: center; }
+  .hero h2 { font: 800 24px/1.3 var(--font); margin: 0 0 4px; }
+  .hero p { margin: 4px 0; color: var(--fg2); }
+  .counts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .counts span { font: 700 12px/1 var(--mono); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); color: var(--fg2); }
+  .counts span b { color: var(--fg); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; margin-top: 16px; }
+  .card { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg2); }
+  .card.required { border-color: var(--red); }
+  .card.unknown { border-color: var(--amber); }
+  .card h3 { font: 700 15px/1.3 var(--font); margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+  .card .ver { font: 12px var(--mono); color: var(--fg2); }
+  .card .v { font: 700 13px/1 var(--font); padding: 4px 8px; border-radius: 4px; }
+  .v.required { background: rgba(255,59,48,0.16); color: var(--red); }
+  .v.unknown { background: rgba(255,176,32,0.16); color: var(--amber); }
+  .v.ok { background: rgba(34,197,94,0.16); color: var(--green); }
+  .v.quiet { background: rgba(230,234,242,0.08); color: var(--fg3); }
+  .card .btn { width: 100%; margin-top: 12px; padding: 12px; font-size: 14px; }
+  .card .f { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 13px; color: var(--fg2); }
+  .card .f b { color: var(--fg); }
+  .card .log { font: 11px/1.5 var(--mono); color: var(--fg3); white-space: pre-wrap; max-height: 120px; overflow: auto; margin-top: 8px; }
+  details { margin-top: 24px; color: var(--fg2); font-size: 13px; }
+  details summary { cursor: pointer; color: var(--fg3); }
+  footer { padding: 12px 24px 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  footer label { font-size: 12px; color: var(--fg2); display: flex; align-items: center; gap: 6px; }
+  .os { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px dashed var(--line); border-radius: 12px; margin-top: 16px; }
+  .os .btn { padding: 10px 14px; font-size: 13px; }
+</style>
+</head>
+<body class="is-unknown">
+<div class="stripe quiet" id="stripe"></div>
+<header>
+  <img src="shared/../icon48.png" width="22" height="22" alt="" onerror="this.style.display='none'">
+  <h1>緊急セキュリティ速報 <span class="tiny">デスクトップ</span></h1>
+  <span class="tiny mono time" id="time"></span>
+  <button id="recheck">今すぐ確認</button>
+</header>
+<main>
+  <section class="hero">
+    <p class="kanji" id="kanji">確認中</p>
+    <div>
+      <h2 id="headline">PC に入っているソフトを確認しています…</h2>
+      <p id="lead" class="muted"></p>
+      <div class="counts" id="counts"></div>
+    </div>
+  </section>
+  <div class="grid" id="grid"></div>
+  <div class="os" id="os" hidden>
+    <div><b>Windows</b> <span class="tiny mono" id="osver"></span><div class="tiny">Windows 本体の判定はこの版ではしません（判定不能扱い）。更新は Windows Update で。</div></div>
+    <button class="btn soft" id="winupdate" style="margin-left:auto">Windows Update を開く</button>
+  </div>
+  <details>
+    <summary>見ている製品（対応表）と、直近の速報</summary>
+    <div id="watch" class="tiny"></div>
+    <div id="alerts"></div>
+  </details>
+  <div class="promise" style="margin-top:24px">
+    <span>🛡</span>
+    <div><b>このアプリが電話やダウンロードを求めることはありません。</b>更新は Windows の仕組み（winget・ストア・Windows Update）だけで行い、PC の中身（入っているソフトの一覧）は外に送りません。</div>
+  </div>
+</main>
+<footer>
+  <label><input type="checkbox" id="autostart"> Windows の起動時に常駐する</label>
+  <label><input type="checkbox" id="notify" checked> 要対応のとき通知する</label>
+  <span class="tiny" id="status"></span>
+</footer>
+<script type="module" src="app.js"></script>
+</body>
+</html>

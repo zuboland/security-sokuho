@@ -9,5 +9,7 @@
   "https://www.ipa.go.jp/security/alert-rss.rdf": "ipa.rdf",
   "https://jvndb.jvn.jp/myjvn": "jvn_maintenance.html",
   "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-relnotes-security": "edge.html",
-  "https://hn.algolia.com/api/v1/search": "hn_empty.json"
+  "https://hn.algolia.com/api/v1/search": "hn_empty.json",
+  "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2026-87491": "nvd_CVE-2026-87491.json",
+  "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2026-65400": "nvd_CVE-2026-65400.json"
 }

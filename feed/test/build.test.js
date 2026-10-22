@@ -19,6 +19,8 @@ async function build(publicDir) {
     SECALERT_PUBLIC: publicDir,
     SECALERT_SUMMARY_DIR: path.join(publicDir, '_summaries'),
     SECALERT_POSTS_DIR: path.join(publicDir, '_posts'),
+    SECALERT_AFFECTED_DIR: path.join(publicDir, '_affected'),
+    SECALERT_NVD_MAX: '20',
     SECALERT_AI: 'none',
   };
   return run(process.execPath, [path.join(feedDir, 'src', 'build.js')], { env, cwd: feedDir });
@@ -29,9 +31,12 @@ test('build: 2回続けて実行して公開物が1バイトも変わらない�
   try {
     await build(dir);
     const first = {};
-    for (const f of ['feed.json', 'alerts.json', 'browsers.json']) first[f] = await readFile(path.join(dir, f), 'utf8');
+    for (const f of ['feed.json', 'alerts.json', 'browsers.json', 'affected.json']) first[f] = await readFile(path.join(dir, f), 'utf8');
     await build(dir);
-    for (const f of ['feed.json', 'alerts.json', 'browsers.json']) assert.equal(await readFile(path.join(dir, f), 'utf8'), first[f], `${f} が変わった`);
+    for (const f of ['feed.json', 'alerts.json', 'browsers.json', 'affected.json']) assert.equal(await readFile(path.join(dir, f), 'utf8'), first[f], `${f} が変わった`);
+    const affected = JSON.parse(first['affected.json']);
+    assert.ok(affected.cves['CVE-2026-87491'], 'Chrome の悪用確認済み CVE の影響範囲が入る');
+    assert.equal(affected.cves['CVE-2026-87491'].ranges[0].end_excl, '153.0.8010.36');
 
     const feed = JSON.parse(first['feed.json']);
     const alerts = JSON.parse(first['alerts.json']);

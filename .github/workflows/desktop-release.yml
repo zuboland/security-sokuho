@@ -1,0 +1,74 @@
+# 常駐アプリ（Windows）の署名ビルドと GitHub Releases への公開。
+# タグ desktop-v* を push すると走る。署名は Azure Trusted Signing（UNICREW・KUZIRA と同じ zuboland-prod）。
+# Secrets が無い fork では未署名のままビルドだけ通る（sign-windows.mjs が警告して exit 0）。
+name: desktop-release
+
+on:
+  push:
+    tags: ["desktop-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: 解析・判定のテスト（winget の実出力・固定応答）
+        run: node scripts/sync-shared.mjs && node --test test/
+        working-directory: desktop
+  build-windows:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: desktop/src-tauri }
+      - name: 依存を入れる
+        run: npm ci --no-audit --no-fund
+        working-directory: desktop
+      - name: 署名ツール（Trusted Signing dlib）を用意
+        if: ${{ env.AZURE_CLIENT_ID != '' }}
+        shell: pwsh
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        run: |
+          nuget install Microsoft.Trusted.Signing.Client -Version 1.0.53 -OutputDirectory "$env:RUNNER_TEMP\tsc" -x
+          echo "TRUSTED_SIGNING_DIR=$env:RUNNER_TEMP\tsc\Microsoft.Trusted.Signing.Client" >> $env:GITHUB_ENV
+      - name: ビルド（署名込み）
+        run: npm run build
+        working-directory: desktop
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      - name: 署名の実測（signtool verify）
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem desktop/src-tauri/target/release/bundle/nsis/*.exe | Select-Object -First 1
+          "installer: $($exe.FullName)"
+          $sig = Get-AuthenticodeSignature $exe.FullName
+          "status: $($sig.Status) / signer: $($sig.SignerCertificate.Subject)"
+          if ("${{ secrets.AZURE_CLIENT_ID }}" -ne "" -and $sig.Status -ne "Valid") { throw "署名が有効ではありません" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: desktop/src-tauri/target/release/bundle/nsis/*.exe
+      - name: Releases に出す（プレリリース）
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          name: 常駐アプリ ${{ github.ref_name }}
+          files: desktop/src-tauri/target/release/bundle/nsis/*.exe
+          body: |
+            緊急セキュリティ速報 デスクトップ（Windows・プレリリース）。
+            インストーラーは ZUBOLAND株式会社 の証明書で署名しています（Azure Trusted Signing）。
+            PC の中身は外に送りません。更新は winget／ストア／Windows Update だけで行います。

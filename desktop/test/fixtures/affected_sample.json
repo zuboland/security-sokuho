@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "cves": {
+    "CVE-2026-87491": { "published": "2026-09-09", "cvss": 8.8, "ranges": [ { "part": "a", "vendor": "google", "product": "chrome", "version": null, "start_incl": null, "start_excl": null, "end_incl": null, "end_excl": "153.0.8010.36" } ] },
+    "CVE-2026-99999": { "published": "2026-10-01", "cvss": 7.8, "ranges": [ { "part": "a", "vendor": "7-zip", "product": "7-zip", "version": null, "start_incl": null, "start_excl": null, "end_incl": null, "end_excl": "26.05" } ] },
+    "CVE-2026-88888": { "published": "2026-10-02", "cvss": 7.0, "ranges": [ { "part": "a", "vendor": "videolan", "product": "vlc_media_player", "version": "3.0.23", "start_incl": null, "start_excl": null, "end_incl": null, "end_excl": null } ] }
+  }
+}

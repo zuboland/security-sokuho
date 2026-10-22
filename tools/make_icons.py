@@ -22,10 +22,13 @@ with sync_playwright() as p:
     b = p.chromium.launch()
     pg = b.new_page(viewport={"width": 128, "height": 128}, device_scale_factor=1)
     pg.set_content(HTML)
-    for size in (16, 48, 128):
+    for size in (16, 48, 128, 1024):
         pg.set_viewport_size({"width": 128, "height": 128})
         pg.evaluate("s => { const el = document.getElementById('box'); el.style.transformOrigin='0 0'; el.style.transform = `scale(${s/128})`; }", size)
         pg.set_viewport_size({"width": size, "height": size})
-        pg.locator("#box").screenshot(path=str(OUT / f"icon{size}.png"), omit_background=True)
-        print("wrote", OUT / f"icon{size}.png")
+        # 1024 は常駐アプリ（Tauri の `tauri icon` の元絵）用。拡張には使わない
+        out = OUT / f"icon{size}.png" if size <= 128 else OUT.parent.parent / "desktop" / "src-tauri" / "icon-source-1024.png"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        pg.locator("#box").screenshot(path=str(out), omit_background=True)
+        print("wrote", out)
     b.close()

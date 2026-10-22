@@ -1,0 +1,805 @@
+{
+  "schema": 1,
+  "note": "常駐アプリが「PCに入っている物」を NVD の CPE（vendor:product）に寄せるための対応表。手で作っているので必ず古くなる＝tools/catalog_check.py で実在を確かめる。増やすときは PR 歓迎。",
+  "products": [
+    {
+      "key": "chrome",
+      "label": "Google Chrome",
+      "cpe": [
+        "google:chrome"
+      ],
+      "winget": [
+        "Google.Chrome"
+      ],
+      "msix": [],
+      "arp": [
+        "^Google Chrome$"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Google.Chrome"
+      },
+      "class": "browser-chrome"
+    },
+    {
+      "key": "edge",
+      "label": "Microsoft Edge",
+      "cpe": [
+        "microsoft:edge_chromium",
+        "microsoft:edge"
+      ],
+      "winget": [
+        "Microsoft.Edge"
+      ],
+      "msix": [
+        "Microsoft.MicrosoftEdge.Stable"
+      ],
+      "arp": [
+        "^Microsoft Edge$"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Microsoft.Edge"
+      },
+      "class": "browser-edge"
+    },
+    {
+      "key": "firefox",
+      "label": "Mozilla Firefox",
+      "cpe": [
+        "mozilla:firefox"
+      ],
+      "winget": [
+        "Mozilla.Firefox",
+        "Mozilla.Firefox.ja"
+      ],
+      "msix": [],
+      "arp": [
+        "^Mozilla Firefox"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Mozilla.Firefox"
+      },
+      "class": "browser-firefox"
+    },
+    {
+      "key": "brave",
+      "label": "Brave",
+      "cpe": [
+        "brave:brave"
+      ],
+      "winget": [
+        "Brave.Brave"
+      ],
+      "msix": [],
+      "arp": [
+        "^Brave$"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Brave.Brave"
+      },
+      "class": "browser-chrome"
+    },
+    {
+      "key": "7zip",
+      "label": "7-Zip",
+      "cpe": [
+        "7-zip:7-zip"
+      ],
+      "winget": [
+        "7zip.7zip"
+      ],
+      "msix": [],
+      "arp": [
+        "^7-Zip"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "7zip.7zip"
+      },
+      "class": "archiver"
+    },
+    {
+      "key": "winrar",
+      "label": "WinRAR",
+      "cpe": [
+        "rarlab:winrar"
+      ],
+      "winget": [
+        "RARLab.WinRAR"
+      ],
+      "msix": [],
+      "arp": [
+        "^WinRAR"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "RARLab.WinRAR"
+      },
+      "class": "archiver"
+    },
+    {
+      "key": "acrobat_reader",
+      "label": "Adobe Acrobat Reader",
+      "cpe": [
+        "adobe:acrobat_reader",
+        "adobe:acrobat_reader_dc",
+        "adobe:acrobat"
+      ],
+      "winget": [
+        "Adobe.Acrobat.Reader.64-bit",
+        "Adobe.Acrobat.Reader.32-bit"
+      ],
+      "msix": [],
+      "arp": [
+        "^Adobe Acrobat( Reader)?"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Adobe.Acrobat.Reader.64-bit"
+      },
+      "class": "pdf"
+    },
+    {
+      "key": "foxit",
+      "label": "Foxit PDF Reader",
+      "cpe": [
+        "foxit:pdf_reader",
+        "foxitsoftware:foxit_reader"
+      ],
+      "winget": [
+        "Foxit.FoxitReader"
+      ],
+      "msix": [],
+      "arp": [
+        "^Foxit (PDF )?Reader"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Foxit.FoxitReader"
+      },
+      "class": "pdf"
+    },
+    {
+      "key": "zoom",
+      "label": "Zoom",
+      "cpe": [
+        "zoom:zoom",
+        "zoom:workplace",
+        "zoom:workplace_desktop",
+        "zoom:meetings"
+      ],
+      "winget": [
+        "Zoom.Zoom",
+        "Zoom.Zoom.EXE"
+      ],
+      "msix": [],
+      "arp": [
+        "^Zoom( Workplace)?$"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Zoom.Zoom"
+      },
+      "class": "messaging"
+    },
+    {
+      "key": "teams",
+      "label": "Microsoft Teams",
+      "cpe": [
+        "microsoft:teams"
+      ],
+      "winget": [
+        "Microsoft.Teams"
+      ],
+      "msix": [
+        "MSTeams"
+      ],
+      "arp": [
+        "^Microsoft Teams"
+      ],
+      "update": {
+        "kind": "store",
+        "id": ""
+      },
+      "class": "messaging"
+    },
+    {
+      "key": "slack",
+      "label": "Slack",
+      "cpe": [],
+      "winget": [
+        "SlackTechnologies.Slack"
+      ],
+      "msix": [
+        "91750D7E.Slack"
+      ],
+      "arp": [
+        "^Slack$"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "SlackTechnologies.Slack"
+      },
+      "class": "messaging",
+      "note": "NVD に Slack デスクトップの CPE が無い（2026-10-22 確認）＝判定材料なし"
+    },
+    {
+      "key": "discord",
+      "label": "Discord",
+      "cpe": [
+        "discord:discord"
+      ],
+      "winget": [
+        "Discord.Discord"
+      ],
+      "msix": [],
+      "arp": [
+        "^Discord$"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Discord.Discord"
+      },
+      "class": "messaging"
+    },
+    {
+      "key": "line",
+      "label": "LINE",
+      "cpe": [
+        "linecorp:line"
+      ],
+      "winget": [],
+      "msix": [
+        "NAVER.LINEwin8"
+      ],
+      "arp": [
+        "^LINE$"
+      ],
+      "update": {
+        "kind": "store",
+        "id": ""
+      },
+      "class": "messaging"
+    },
+    {
+      "key": "vlc",
+      "label": "VLC media player",
+      "cpe": [
+        "videolan:vlc_media_player"
+      ],
+      "winget": [
+        "VideoLAN.VLC"
+      ],
+      "msix": [],
+      "arp": [
+        "^VLC media player"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "VideoLAN.VLC"
+      },
+      "class": "other"
+    },
+    {
+      "key": "java_oracle",
+      "label": "Java（Oracle）",
+      "cpe": [
+        "oracle:jdk",
+        "oracle:jre",
+        "oracle:java_se"
+      ],
+      "winget": [
+        "Oracle.JavaRuntimeEnvironment",
+        "Oracle.JDK.17",
+        "Oracle.JDK.21"
+      ],
+      "msix": [],
+      "arp": [
+        "^Java \\d",
+        "^Java\\(TM\\)"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Oracle.JavaRuntimeEnvironment"
+      },
+      "class": "runtime-java"
+    },
+    {
+      "key": "java_microsoft",
+      "label": "Java（Microsoft Build of OpenJDK）",
+      "cpe": [
+        "oracle:openjdk"
+      ],
+      "winget": [
+        "Microsoft.OpenJDK.17",
+        "Microsoft.OpenJDK.21",
+        "Microsoft.OpenJDK.11"
+      ],
+      "msix": [],
+      "arp": [
+        "^Microsoft Build of OpenJDK"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Microsoft.OpenJDK.17"
+      },
+      "class": "runtime-java"
+    },
+    {
+      "key": "java_adoptium",
+      "label": "Java（Eclipse Temurin）",
+      "cpe": [
+        "oracle:openjdk",
+        "eclipse:temurin"
+      ],
+      "winget": [
+        "EclipseAdoptium.Temurin.17.JDK",
+        "EclipseAdoptium.Temurin.21.JDK",
+        "EclipseAdoptium.Temurin.17.JRE",
+        "EclipseAdoptium.Temurin.21.JRE"
+      ],
+      "msix": [],
+      "arp": [
+        "^Eclipse Temurin"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "EclipseAdoptium.Temurin.21.JDK"
+      },
+      "class": "runtime-java"
+    },
+    {
+      "key": "notepadpp",
+      "label": "Notepad++",
+      "cpe": [
+        "notepad-plus-plus:notepad\\+\\+"
+      ],
+      "winget": [
+        "Notepad++.Notepad++"
+      ],
+      "msix": [],
+      "arp": [
+        "^Notepad\\+\\+"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Notepad++.Notepad++"
+      },
+      "class": "other"
+    },
+    {
+      "key": "git",
+      "label": "Git",
+      "cpe": [
+        "git-scm:git",
+        "git:git"
+      ],
+      "winget": [
+        "Git.Git"
+      ],
+      "msix": [],
+      "arp": [
+        "^Git$",
+        "^Git version"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Git.Git"
+      },
+      "class": "other"
+    },
+    {
+      "key": "nodejs",
+      "label": "Node.js",
+      "cpe": [
+        "nodejs:node.js"
+      ],
+      "winget": [
+        "OpenJS.NodeJS",
+        "OpenJS.NodeJS.LTS"
+      ],
+      "msix": [],
+      "arp": [
+        "^Node\\.js"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "OpenJS.NodeJS.LTS"
+      },
+      "class": "other"
+    },
+    {
+      "key": "python",
+      "label": "Python",
+      "cpe": [
+        "python:python"
+      ],
+      "winget": [
+        "Python.Python.3.12",
+        "Python.Python.3.13",
+        "Python.Python.3.11"
+      ],
+      "msix": [],
+      "arp": [
+        "^Python 3\\."
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Python.Python.3.12"
+      },
+      "class": "other"
+    },
+    {
+      "key": "obs",
+      "label": "OBS Studio",
+      "cpe": [],
+      "winget": [
+        "OBSProject.OBSStudio"
+      ],
+      "msix": [],
+      "arp": [
+        "^OBS Studio"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "OBSProject.OBSStudio"
+      },
+      "class": "other",
+      "note": "NVD に OBS Studio の CPE が無い（2026-10-22 確認）"
+    },
+    {
+      "key": "steam",
+      "label": "Steam",
+      "cpe": [
+        "valvesoftware:steam"
+      ],
+      "winget": [
+        "Valve.Steam"
+      ],
+      "msix": [],
+      "arp": [
+        "^Steam$"
+      ],
+      "update": {
+        "kind": "manual",
+        "id": ""
+      },
+      "class": "other"
+    },
+    {
+      "key": "dropbox",
+      "label": "Dropbox",
+      "cpe": [
+        "dropbox:dropbox"
+      ],
+      "winget": [
+        "Dropbox.Dropbox"
+      ],
+      "msix": [],
+      "arp": [
+        "^Dropbox$"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Dropbox.Dropbox"
+      },
+      "class": "other"
+    },
+    {
+      "key": "onedrive",
+      "label": "Microsoft OneDrive",
+      "cpe": [
+        "microsoft:onedrive"
+      ],
+      "winget": [
+        "Microsoft.OneDrive"
+      ],
+      "msix": [],
+      "arp": [
+        "^Microsoft OneDrive"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Microsoft.OneDrive"
+      },
+      "class": "other"
+    },
+    {
+      "key": "itunes",
+      "label": "iTunes",
+      "cpe": [
+        "apple:itunes"
+      ],
+      "winget": [
+        "Apple.iTunes"
+      ],
+      "msix": [
+        "AppleInc.iTunes"
+      ],
+      "arp": [
+        "^iTunes$"
+      ],
+      "update": {
+        "kind": "store",
+        "id": ""
+      },
+      "class": "other"
+    },
+    {
+      "key": "spotify",
+      "label": "Spotify",
+      "cpe": [
+        "spotify:spotify"
+      ],
+      "winget": [
+        "Spotify.Spotify"
+      ],
+      "msix": [
+        "SpotifyAB.SpotifyMusic"
+      ],
+      "arp": [
+        "^Spotify$"
+      ],
+      "update": {
+        "kind": "store",
+        "id": ""
+      },
+      "class": "other"
+    },
+    {
+      "key": "office",
+      "label": "Microsoft Office / Microsoft 365",
+      "cpe": [
+        "microsoft:office",
+        "microsoft:365_apps",
+        "microsoft:office_long_term_servicing_channel"
+      ],
+      "winget": [
+        "Microsoft.Office"
+      ],
+      "msix": [],
+      "arp": [
+        "^Microsoft (365|Office)"
+      ],
+      "update": {
+        "kind": "manual",
+        "id": ""
+      },
+      "class": "office"
+    },
+    {
+      "key": "vscode",
+      "label": "Visual Studio Code",
+      "cpe": [
+        "microsoft:visual_studio_code"
+      ],
+      "winget": [
+        "Microsoft.VisualStudioCode"
+      ],
+      "msix": [],
+      "arp": [
+        "^Microsoft Visual Studio Code"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Microsoft.VisualStudioCode"
+      },
+      "class": "other"
+    },
+    {
+      "key": "powertoys",
+      "label": "PowerToys",
+      "cpe": [
+        "microsoft:powertoys"
+      ],
+      "winget": [
+        "Microsoft.PowerToys"
+      ],
+      "msix": [],
+      "arp": [
+        "^PowerToys"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Microsoft.PowerToys"
+      },
+      "class": "other"
+    },
+    {
+      "key": "winscp",
+      "label": "WinSCP",
+      "cpe": [
+        "winscp:winscp"
+      ],
+      "winget": [
+        "WinSCP.WinSCP"
+      ],
+      "msix": [],
+      "arp": [
+        "^WinSCP"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "WinSCP.WinSCP"
+      },
+      "class": "other"
+    },
+    {
+      "key": "filezilla",
+      "label": "FileZilla",
+      "cpe": [
+        "filezilla-project:filezilla_client"
+      ],
+      "winget": [],
+      "msix": [],
+      "arp": [
+        "^FileZilla Client"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "TimKosse.FileZilla.Client"
+      },
+      "class": "other",
+      "note": "winget の ID を確認できず（2026-10-22）。表示名で拾う"
+    },
+    {
+      "key": "teamviewer",
+      "label": "TeamViewer",
+      "cpe": [
+        "teamviewer:teamviewer"
+      ],
+      "winget": [
+        "TeamViewer.TeamViewer"
+      ],
+      "msix": [],
+      "arp": [
+        "^TeamViewer"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "TeamViewer.TeamViewer"
+      },
+      "class": "other"
+    },
+    {
+      "key": "anydesk",
+      "label": "AnyDesk",
+      "cpe": [
+        "anydesk:anydesk"
+      ],
+      "winget": [
+        "AnyDesk.AnyDesk"
+      ],
+      "msix": [],
+      "arp": [
+        "^AnyDesk"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "AnyDesk.AnyDesk"
+      },
+      "class": "other"
+    },
+    {
+      "key": "bitwarden",
+      "label": "Bitwarden",
+      "cpe": [
+        "bitwarden:bitwarden"
+      ],
+      "winget": [
+        "Bitwarden.Bitwarden"
+      ],
+      "msix": [
+        "8bitSolutionsLLC.bitwardendesktop"
+      ],
+      "arp": [
+        "^Bitwarden$"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Bitwarden.Bitwarden"
+      },
+      "class": "other"
+    },
+    {
+      "key": "1password",
+      "label": "1Password",
+      "cpe": [
+        "1password:1password",
+        "agilebits:1password"
+      ],
+      "winget": [
+        "AgileBits.1Password"
+      ],
+      "msix": [],
+      "arp": [
+        "^1Password"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "AgileBits.1Password"
+      },
+      "class": "other"
+    },
+    {
+      "key": "keepass",
+      "label": "KeePass",
+      "cpe": [
+        "keepass:keepass"
+      ],
+      "winget": [
+        "DominikReichl.KeePass"
+      ],
+      "msix": [],
+      "arp": [
+        "^KeePass Password Safe"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "DominikReichl.KeePass"
+      },
+      "class": "other"
+    },
+    {
+      "key": "audacity",
+      "label": "Audacity",
+      "cpe": [
+        "audacityteam:audacity",
+        "audacity:audacity"
+      ],
+      "winget": [
+        "Audacity.Audacity"
+      ],
+      "msix": [],
+      "arp": [
+        "^Audacity"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Audacity.Audacity"
+      },
+      "class": "other"
+    },
+    {
+      "key": "ffmpeg",
+      "label": "FFmpeg",
+      "cpe": [
+        "ffmpeg:ffmpeg"
+      ],
+      "winget": [
+        "Gyan.FFmpeg"
+      ],
+      "msix": [],
+      "arp": [
+        "^FFmpeg"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Gyan.FFmpeg"
+      },
+      "class": "other"
+    },
+    {
+      "key": "claude_desktop",
+      "label": "Claude（デスクトップ）",
+      "cpe": [
+        "anthropic:claude_desktop"
+      ],
+      "winget": [
+        "Anthropic.Claude"
+      ],
+      "msix": [],
+      "arp": [
+        "^Claude$"
+      ],
+      "update": {
+        "kind": "winget",
+        "id": "Anthropic.Claude"
+      },
+      "class": "other"
+    }
+  ]
+}

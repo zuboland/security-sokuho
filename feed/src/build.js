@@ -22,6 +22,7 @@ import { classify, classLabel, actionTemplate, whoTemplate, protectAdvice, kindO
 import { compareVersions } from './version.js';
 import { applySummaries } from './summarize.js';
 import { attachPosts } from './sources/social.js';
+import { collectAffected } from './sources/nvd.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const PUBLIC_DIR = process.env.SECALERT_PUBLIC || path.join(here, '..', 'public');
@@ -285,7 +286,7 @@ function stable(obj) {
   return JSON.stringify(obj, null, 1) + '\n';
 }
 
-export async function writeOutputs({ items, alerts, browsers, failed, generatedAt }) {
+export async function writeOutputs({ items, alerts, browsers, failed, generatedAt, affected = {} }) {
   await mkdir(PUBLIC_DIR, { recursive: true });
   // 静的ページ（プライバシーポリシー等）は feed/static/ からそのまま配信に乗せる
   const staticDir = path.join(here, '..', 'static');
@@ -297,6 +298,9 @@ export async function writeOutputs({ items, alerts, browsers, failed, generatedA
   await writeFile(path.join(PUBLIC_DIR, 'feed.json'), stable({ schema, window_days: WINDOW_DAYS, items }));
   await writeFile(path.join(PUBLIC_DIR, 'alerts.json'), stable({ schema, items: alerts }));
   await writeFile(path.join(PUBLIC_DIR, 'browsers.json'), stable({ schema, ...browsers }));
+  // affected.json は fetched_at を落として安定させる（中身が同じなら変わらない）
+  const aff = Object.fromEntries(Object.entries(affected).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, { published: v.published, last_modified: v.last_modified, cvss: v.cvss, ranges: v.ranges }]));
+  await writeFile(path.join(PUBLIC_DIR, 'affected.json'), stable({ schema, cves: aff }));
   await writeFile(path.join(PUBLIC_DIR, 'status.json'), stable({ schema, generated_at: generatedAt, sources_failed: failed, counts: { items: items.length, alerts: alerts.length } }));
 }
 
@@ -315,7 +319,13 @@ export async function main() {
   items = await applySummaries(items); // AI 要約（SECALERT_AI=none なら何もしない）
   items = await attachPosts(items); // 関連する投稿（速報の件だけ・Hacker News は無料・X は鍵があるときだけ）
   alerts = items.filter((i) => i.severity === 'critical');
-  await writeOutputs({ items, alerts, browsers, failed, generatedAt: new Date().toISOString() });
+  // 影響範囲（NVD）：常駐アプリが手元の版数と比べる材料。速報と high の件だけ
+  // 速報（critical）から先に取る（1回の上限に当たっても、常駐アプリが使う件から順に範囲がそろう）
+  const rank = { critical: 0, high: 1 };
+  const cvesForRanges = [...items].filter((i) => i.severity !== 'info').sort((a, b) => rank[a.severity] - rank[b.severity])
+    .flatMap((i) => i.exploited_cves.length ? i.exploited_cves : i.cves.slice(0, 3));
+  const affected = await collectAffected(cvesForRanges);
+  await writeOutputs({ items, alerts, browsers, failed, generatedAt: new Date().toISOString(), affected });
   console.log(`items ${items.length} / alerts ${alerts.length} / chrome min_safe ${browsers.chrome.min_safe} / edge min_safe ${browsers.edge.min_safe} / failed ${failed.map((f) => f.source).join(',') || 'none'}`);
 }
 

@@ -56,11 +56,12 @@ with sync_playwright() as p:
     pg = ctx.new_page(); pg.set_viewport_size({"width": 1280, "height": 800}); pg.goto(f"chrome-extension://{ext_id}/alert.html"); pg.wait_for_timeout(1500)
     pg.screenshot(path=str(OUT / "1_alert_required.png")); print("wrote", OUT / "1_alert_required.png")
     # 2. ポップアップ（要対応）
+    HIDE = "::-webkit-scrollbar{display:none} html{scrollbar-width:none}"
     pp = ctx.new_page(); pp.set_viewport_size({"width": 400, "height": 760}); pp.goto(f"chrome-extension://{ext_id}/popup.html"); pp.wait_for_timeout(1200)
-    pp.screenshot(path=str(tmp / "popup_req.png")); compose(tmp / "popup_req.png", OUT / "2_popup_required.png")
+    pp.add_style_tag(content=HIDE); pp.screenshot(path=str(tmp / "popup_req.png")); compose(tmp / "popup_req.png", OUT / "2_popup_required.png")
     # 3. ポップアップ（速報なし）
     feed(fd, None); sw.evaluate("async () => await globalThis.__secalert.check()"); pp.reload(); pp.wait_for_timeout(1200)
-    pp.screenshot(path=str(tmp / "popup_quiet.png")); compose(tmp / "popup_quiet.png", OUT / "3_popup_quiet.png")
+    pp.add_style_tag(content=HIDE); pp.screenshot(path=str(tmp / "popup_quiet.png")); compose(tmp / "popup_quiet.png", OUT / "3_popup_quiet.png")
     ctx.close()
 srv.shutdown(); srv.server_close()
 for f in sorted(OUT.glob("*.png")):
