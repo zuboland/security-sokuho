@@ -43,8 +43,12 @@ jobs:
         if: ${{ env.AZURE_CLIENT_ID != '' }}
         shell: pwsh
         run: |
-          nuget install Microsoft.Trusted.Signing.Client -Version 1.0.53 -OutputDirectory "$env:RUNNER_TEMP\tsc" -x
-          echo "TRUSTED_SIGNING_DIR=$env:RUNNER_TEMP\tsc\Microsoft.Trusted.Signing.Client" >> $env:GITHUB_ENV
+          # UNICREW の release.yml と同じ版に固定（実証済み）。signtool は Windows SDK BuildTools の NuGet から取る（2026-10-22 実測＝入れ忘れて signtool=null で落ちた）
+          $dir = "$env:RUNNER_TEMP\TrustedSigning"
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          nuget install Microsoft.Trusted.Signing.Client -Version 1.0.95 -OutputDirectory $dir -x
+          nuget install Microsoft.Windows.SDK.BuildTools -Version 10.0.26100.4188 -OutputDirectory $dir -x
+          echo "TRUSTED_SIGNING_DIR=$dir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
       - name: ビルド（署名込み）
         run: npm run build
         working-directory: desktop
