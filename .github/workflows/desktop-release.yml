@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - name: 解析・判定のテスト（winget の実出力・固定応答）
-        run: node scripts/sync-shared.mjs && node --test test/
+        run: node scripts/sync-shared.mjs && node --test "test/*.test.js"
         working-directory: desktop
   build-windows:
     needs: test

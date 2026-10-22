@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "sync": "node scripts/sync-shared.mjs",
-    "test": "node --test test/",
+    "test": "node --test \"test/*.test.js\"",
     "dev": "npm run sync && tauri dev",
     "build": "npm run sync && tauri build",
     "tauri": "tauri"
