@@ -72,7 +72,8 @@ def main():
         sw.evaluate("base => chrome.storage.sync.set({ feedBase: base, notify: true })", base)
         # 🚨 インストール直後の自動確認（既定URL）が走っている間は check() が同じ実行を返す。1回待ってから始める
         write_feed(feed_dir, None); run_check(sw); run_check(sw)
-        sw.evaluate("() => chrome.storage.local.clear()")
+        # 起動時の確認で付いた既読と状態だけ消す（開いた速報タブの id は残す＝1枚だけの検査のため）
+        sw.evaluate("async () => { const all = await chrome.storage.local.get(null); const del = Object.keys(all).filter(k => k !== 'alertTabId'); await chrome.storage.local.remove(del); }")
         sw.evaluate("base => chrome.storage.sync.set({ feedBase: base, notify: true })", base)
 
         # 1. 版数

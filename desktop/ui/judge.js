@@ -59,13 +59,18 @@ function groupInstances(product, hits) {
     for (const [k, v] of groups) if (!k.startsWith('winget:')) { main.push(...v); groups.delete(k); }
   }
   return [...groups.entries()].map(([key, list]) => {
-    let version = null; let raw = null;
-    for (const h of list) {
-      const v = normalizeVersion(h.version);
-      if (!v || !parseVersion(v)) continue;
-      if (!version || compareVersions(v, version) > 0) { version = v; raw = h.version; }
-    }
+    // 版数は winget の値を優先（レジストリは「3.12.10150.0」のようにビルド番号を混ぜる＝2026-10-22 実測。最大値を採ると偽の ok になる）
     const w = list.find((h) => h.kind === 'winget');
+    let version = null; let raw = null;
+    const wv = w ? normalizeVersion(w.version) : null;
+    if (wv && parseVersion(wv)) { version = wv; raw = w.version; }
+    else {
+      for (const h of list) {
+        const v = normalizeVersion(h.version);
+        if (!v || !parseVersion(v)) continue;
+        if (!version || compareVersions(v, version) > 0) { version = v; raw = h.version; }
+      }
+    }
     return { key, items: list, version, raw_version: raw || list.map((h) => h.version).find(Boolean) || null, winget_id: w?.id || null, available: list.map((h) => h.available).find(Boolean) || null };
   });
 }

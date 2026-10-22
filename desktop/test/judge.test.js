@@ -97,6 +97,9 @@ test('判定：同じ実体が winget とレジストリで2行なら新しい�
   const browsers = { ...browsersOk, edge: { status: 'ok', min_safe: '152.0.4191.66', exploited_cves: ['CVE-2026-87491'], alert_id: 'chrome-153.0.8010.36' } };
   const r = J({ installed, browsers });
   assert.equal(r.products.find((p) => p.key === 'claude_desktop').version, '1.52386.0.0');
+  // レジストリの「3.12.10150.0」（ビルド番号混じり）より winget の「3.12.10」を採る
+  const py = J({ installed: [{ kind: 'winget', id: 'Python.Python.3.12', name: 'Python 3.12', version: '3.12.10', available: null }, { kind: 'arp', id: 'ARP\\User\\X64\\{py}', name: 'Python 3.12.10 (64-bit)', version: '3.12.10150.0', available: null }] });
+  assert.equal(py.products.find((p) => p.key === 'python').version, '3.12.10');
   const edge = r.products.find((p) => p.key === 'edge');
   assert.equal(edge.verdict, 'required'); assert.ok(edge.notify); assert.equal(edge.findings[0].from, 'browsers');
 });
