@@ -4,3 +4,8 @@ docs/popup_required.png
 *.log
 .DS_Store
 dist/
+desktop/src-tauri/target/
+desktop/src-tauri/gen/
+desktop/src-tauri/icons/android/
+desktop/src-tauri/icons/ios/
+desktop/ui/shared/

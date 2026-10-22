@@ -86,10 +86,20 @@ AI の出力は機械で検査し、**その件に無い版数・電話番号・
 - アイコン：`python tools/make_icons.py`（社内のアイコン正本の盾 SVG から作る。AI画像は使わない）
 - 設計の決まり：判定は3値／版数の判定に AI を使わない／PCの中身を外に出さない／速報は「悪用確認済み × 自分が影響を受ける」の両方がそろったときだけ
 
+## 常駐アプリ（Windows・プレリリース）
+
+ブラウザだけでなく、**PC に入っているソフト全体**（対応表にある 40 製品）を公開フィードと照合し、要対応のときだけ通知して「今すぐ更新する」ボタンで `winget upgrade` を実行する常駐アプリです（`desktop/`・Tauri 2）。
+
+- 判定の材料：`affected.json`（NVD の CPE と修正版の範囲）× `catalog.json`（winget の ID／レジストリの表示名 → CPE の対応表）× `winget list`／レジストリ
+- 3値：要対応／対応済み／判定不能。対応表に無い物は「分からない」ので出しません（設定で見ている製品を確認できます）。Windows 本体はこの版では判定せず「Windows Update を開く」だけ
+- PC の中身は外に送りません。通信は公開フィードの取得と、更新時の winget（Microsoft のソース）だけ
+- インストーラーは ZUBOLAND株式会社 の証明書で署名（Azure Trusted Signing）。[Releases](https://github.com/zuboland/security-sokuho/releases) から
+- 開発：`cd desktop && npm ci && npm test`（winget の実出力 243 行を固定応答にした解析・判定テスト）／`npm run dev`（Rust ツールチェーンが要ります）
+- 対応表の実在検査：`python tools/catalog_check.py`（winget の ID と NVD の CPE が本当にあるか。手書きの表は必ず古くなるため）
+
 ## 予定
 
-- Firefox 対応（Mozilla の勧告ページの解析）
-- 常駐アプリ（PC に入っているソフト全体を照合し、ワンクリックで更新）
+- 常駐アプリ：Windows 本体の判定（KB・ビルドの対応表）、Mac 版
 - 「自分の状況についての質問」（自分の鍵で使う／有料）
 
 ## ライセンス
