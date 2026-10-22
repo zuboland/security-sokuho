@@ -18,7 +18,8 @@ ap.add_argument("--x-key-name", default="X_API_KEY")
 ap.add_argument("--x-secret-name", default="X_API_SECRET")
 ap.add_argument("--x-from-xurl", action="store_true", help="~/.xurl/auth.yml の default アプリの client_id/secret から app-only bearer を取る")
 ap.add_argument("--x-env-file", default=None, help="X_API_KEY/X_API_SECRET が書かれた env ファイルのパス（profile に無いとき）")
-ap.add_argument("--social", default="hn")
+ap.add_argument("--azure-env-file", default=None, help="AZURE_TENANT_ID/CLIENT_ID/CLIENT_SECRET が書かれた env ファイル（署名用・Trusted Signing）")
+ap.add_argument("--social", default=None)
 a = ap.parse_args()
 
 
@@ -85,4 +86,16 @@ if a.x_profile or a.x_from_xurl or a.x_env_file:
         print("X bearer が返らなかった"); sys.exit(1)
     gh_secret("X_BEARER_TOKEN", tok)
 
-gh_var("SECALERT_SOCIAL", a.social)
+if a.azure_env_file:
+    if a.azure_env_file == "kuzira":  # 社内の置き場（KUZIRA・UNICREW と同じ署名の鍵）。パスをコマンド行に出さないための別名
+        a.azure_env_file = r"D:\secrets\.env.kuzira"
+    names = ["AZURE_TENANT_ID", "AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET"]
+    d = read_env_file(a.azure_env_file, set(names))
+    missing = [n for n in names if not d.get(n)]
+    if missing:
+        print("Azure の鍵が足りない:", ", ".join(missing)); sys.exit(1)
+    for n in names:
+        gh_secret(n, d[n])
+
+if a.social:
+    gh_var("SECALERT_SOCIAL", a.social)
