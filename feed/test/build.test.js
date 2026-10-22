@@ -20,6 +20,7 @@ async function build(publicDir) {
     SECALERT_SUMMARY_DIR: path.join(publicDir, '_summaries'),
     SECALERT_POSTS_DIR: path.join(publicDir, '_posts'),
     SECALERT_AFFECTED_DIR: path.join(publicDir, '_affected'),
+    SECALERT_SNAPSHOT_DIR: path.join(publicDir, '_snapshots'),
     SECALERT_NVD_MAX: '20',
     SECALERT_AI: 'none',
   };

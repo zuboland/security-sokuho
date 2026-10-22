@@ -36,10 +36,13 @@ def serve(dirpath):
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
 
-def write_feed(dirpath, min_safe, status="ok"):
+def write_feed(dirpath, min_safe, status="ok", generated_at=None):
+    import datetime
+    gen = generated_at or datetime.datetime.now(datetime.timezone.utc).isoformat()
+    (dirpath / "status.json").write_text(json.dumps({"schema": 1, "generated_at": gen, "sources_failed": []}), encoding="utf-8")
     browsers = {"schema": 1, "chrome": {"status": status, "min_safe": min_safe, "exploited_cves": ["CVE-2026-999999"] if min_safe else [], "alert_id": f"chrome-{min_safe}" if min_safe else None, "alert_date": "2026-10-20", "latest_stable": {"win": "156.0.8078.48"}, "as_of": "2026-10-20"},
                 "edge": {"status": "unknown", "min_safe": None, "exploited_cves": [], "alert_id": None, "alert_date": None, "latest_stable": None, "as_of": None}}
-    alerts = {"schema": 1, "items": [{"id": "chrome-999", "title": "テスト速報", "title_ja": "テスト速報", "summary_ja": "テスト", "action_ja": "更新する", "product_label": "Google Chrome", "cves": ["CVE-2026-999999"], "published": "2026-10-20", "sources": [{"name": "Chrome Releases", "url": "https://example.invalid/"}], "severity": "critical", "exploited": True}]}
+    alerts = {"schema": 1, "window_days": 90, "sources_failed": [], "items": [{"id": "chrome-999", "title": "テスト速報", "title_ja": "テスト速報", "summary_ja": "テスト", "action_ja": "更新する", "product_label": "Google Chrome", "cves": ["CVE-2026-999999"], "published": "2026-10-20", "sources": [{"name": "Chrome Releases", "url": "https://example.invalid/"}], "severity": "critical", "exploited": True}]}
     (dirpath / "browsers.json").write_text(json.dumps(browsers), encoding="utf-8")
     (dirpath / "alerts.json").write_text(json.dumps(alerts), encoding="utf-8")
 
@@ -66,6 +69,10 @@ def main():
         )
         sw = ctx.service_workers[0] if ctx.service_workers else ctx.wait_for_event("serviceworker", timeout=15000)
         time.sleep(1.0)
+        sw.evaluate("base => chrome.storage.sync.set({ feedBase: base, notify: true })", base)
+        # 🚨 インストール直後の自動確認（既定URL）が走っている間は check() が同じ実行を返す。1回待ってから始める
+        write_feed(feed_dir, None); run_check(sw); run_check(sw)
+        sw.evaluate("() => chrome.storage.local.clear()")
         sw.evaluate("base => chrome.storage.sync.set({ feedBase: base, notify: true })", base)
 
         # 1. 版数
@@ -103,6 +110,14 @@ def main():
         check("status=unknown → unknown（no_data）", st["result"]["verdict"] == "unknown" and st["result"]["reason"] == "no_data", st["result"]["reason"])
         check("バッジが「?」", badge(sw) == "?", badge(sw))
 
+        # 5a. 配信が古い（24時間超）→ unknown（stale）／壊れた形（min_safe が数値）→ unknown（bad_feed）
+        write_feed(feed_dir, "999.0.0.0", generated_at="2026-10-01T00:00:00Z")
+        st = run_check(sw)
+        check("配信が24時間以上古い → unknown（stale）・要対応にしない", st["result"]["verdict"] == "unknown" and st["result"]["reason"] == "stale", st["result"]["reason"])
+        (feed_dir / "browsers.json").write_text(json.dumps({"schema": 1, "chrome": {"status": "ok", "min_safe": 0, "exploited_cves": [], "alert_id": None}, "edge": {"status": "unknown", "min_safe": None, "exploited_cves": []}}), encoding="utf-8")
+        write_feed(feed_dir, None); (feed_dir / "browsers.json").write_text(json.dumps({"schema": 1, "chrome": {"status": "ok", "min_safe": 0, "exploited_cves": [], "alert_id": None}, "edge": {"status": "unknown", "min_safe": None, "exploited_cves": []}}), encoding="utf-8")
+        st = run_check(sw)
+        check("min_safe が数値（壊れた配信）→ unknown（bad_feed）", st["result"]["verdict"] == "unknown" and st["result"]["reason"] == "bad_feed", st["result"]["reason"])
         # 5b. フィードが取れない
         print("step: shutdown server")
         srv.shutdown(); srv.server_close()  # 🚨 shutdown() だけだと待受ソケットが残り、接続が永久に待つ

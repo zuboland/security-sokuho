@@ -18,7 +18,7 @@ function render(state) {
     $('kanji').innerHTML = '緊急速報<small>SECURITY ALERT</small>';
     $('eyebrow').textContent = '緊急セキュリティ速報 ── 悪用が確認された脆弱性';
     $('title').textContent = `${n} を今すぐ更新してください`;
-    $('lead').innerHTML = `細工されたページを開くだけで被害を受けるおそれのある欠陥が、<b>実際に攻撃に使われている</b>と ${r.browser === 'edge' ? 'Microsoft' : 'Google'} が発表しました。あなたの ${esc(n)} はまだ修正前の版です。`;
+    $('lead').innerHTML = `細工されたページを開くだけで被害を受けるおそれのある欠陥が、<b>実際に攻撃に使われている</b>と公式（${r.browser === 'edge' ? 'Microsoft' : 'Google'}、または CISA）が発表しました。あなたの ${esc(n)} はまだ修正前の版です。`;
     $('vers').hidden = false;
     $('v-now').textContent = r.version || '—';
     $('v-safe').textContent = r.info.min_safe;
@@ -43,7 +43,8 @@ function render(state) {
     $('kanji').innerHTML = '判定不能<small>UNKNOWN</small>';
     $('eyebrow').textContent = '緊急セキュリティ速報';
     $('title').textContent = '確認できませんでした';
-    $('lead').innerHTML = '版数か、速報の配信元の情報が取れていません。<b>「大丈夫」とは言いません。</b>手で確かめてください。';
+    const why = r.reason === 'stale' ? '速報の配信が止まっていて、情報が古いままです。' : r.reason === 'bad_feed' ? '配信の形が想定と違います（配信側の不具合の可能性）。' : '版数か、速報の配信元の情報が取れていません。';
+    $('lead').innerHTML = `${esc(why)}<b>「大丈夫」とは言いません。</b>手で確かめてください。`;
     $('vers').hidden = true;
     $('update').textContent = `${n} の「〜について」を開く`;
     $('update').classList.add('soft');
@@ -56,22 +57,21 @@ function render(state) {
   if (r.info?.alert_date) facts.push(['発表日', r.info.alert_date]);
   if (alertItem?.summary_ja) facts.push(['何が起きるか', alertItem.summary_ja]);
   $('facts').innerHTML = facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
-  // 守りの行動：更新とは別に、それでもできること
-  const advice = alertItem?.advice_ja || [];
-  if (advice.length) {
-    $('facts').insertAdjacentHTML('afterend', `<div class="advice-title" id="advice-title">あわせてできる守り</div><ul class="advice" id="advice">${advice.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>`);
-  }
-  // 更新では直せない速報（サーバー側・流出など）が他にあれば、守りの行動として並べる
-  const protect = (state.alerts || []).filter((a) => a.kind === 'protect' && (a.advice_ja || []).length).slice(0, 3);
-  if (protect.length) {
-    $('facts').insertAdjacentHTML('afterend', `<div class="advice-title">ほかに出ている速報 ── 自分では直せないが、守りはできる</div>${protect.map((a) => `<div class="row"><div class="t"><span class="tag">${esc(a.product_label)}</span>${esc(a.title_ja || a.title)}</div><ul class="advice">${a.advice_ja.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}`);
-  }
+  // 助言・関連投稿・他の速報は毎回まとめて置き換える（足し続けると古い件が残る・監査R1 F17）
+  let extra = '';
   const posts = alertItem?.related_posts || [];
   if (posts.length) {
-    $('facts').insertAdjacentHTML('beforebegin', `<div class="advice-title" style="color:var(--fg3)">この件について人が書いていること</div><div class="posts">${posts.slice(0, 5).map((p) => p.source === 'x'
+    extra += `<div class="advice-title" style="color:var(--fg3)">この件について人が書いていること</div><div class="posts">${posts.slice(0, 5).map((p) => p.source === 'x'
       ? `<a href="${esc(p.url)}" target="_blank" rel="noopener"><span class="src">X</span>@${esc(p.author || '')} のポスト（${esc((p.created_at || '').slice(0, 10))}）</a>`
-      : `<a href="${esc(p.url)}" target="_blank" rel="noopener"><span class="src">HN</span>${esc(p.title || '')}（${esc((p.created_at || '').slice(0, 10))}）</a>`).join('')}</div>`);
+      : `<a href="${esc(p.url)}" target="_blank" rel="noopener"><span class="src">HN</span>${esc(p.title || '')}（${esc((p.created_at || '').slice(0, 10))}）</a>`).join('')}</div>`;
   }
+  // 守りの行動：更新とは別に、それでもできること
+  const advice = alertItem?.advice_ja || [];
+  if (advice.length) extra += `<div class="advice-title">あわせてできる守り</div><ul class="advice">${advice.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>`;
+  // 更新では直せない速報（サーバー側・流出など）が他にあれば、守りの行動として並べる
+  const protect = (state.alerts || []).filter((a) => a.kind === 'protect' && (a.advice_ja || []).length).slice(0, 3);
+  if (protect.length) extra += `<div class="advice-title">ほかに出ている速報 ── 自分では直せないが、守りはできる</div>${protect.map((a) => `<div class="row"><div class="t"><span class="tag">${esc(a.product_label)}</span>${esc(a.title_ja || a.title)}</div><ul class="advice">${a.advice_ja.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}`;
+  $('extra').innerHTML = extra;
   const srcs = alertItem?.sources || [];
   $('sources').innerHTML = srcs.length ? '一次情報：' + srcs.slice(0, 3).map((s) => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`).join('・') : '';
 

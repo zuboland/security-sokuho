@@ -8,9 +8,11 @@
 // 列の開始位置はヘッダー行の各語の位置。名前に全角文字が混ざると表示幅がずれるので、
 // ヘッダーの位置で切った後、ID 列は「空白を含まない1語」として再確認する。
 
+// 「利用可能」「ソース」は、更新候補が1つも無い PC では列ごと省略される（監査R1 F16）＝必須は 名前・ID・バージョン
 const HEADER_WORDS = [
   ['名前', 'Name'], ['ID', 'Id'], ['バージョン', 'Version'], ['利用可能', 'Available'], ['ソース', 'Source'],
 ];
+const REQUIRED = 3;
 
 /** 表示幅（全角＝2）。列の切り出しに使う */
 export function displayWidth(s) {
@@ -37,23 +39,24 @@ function sliceByWidth(s, from, to) {
 export function parseWingetList(text) {
   const lines = String(text || '').replace(/\r/g, '').split('\n');
   // 進捗バーなどの前置きを飛ばして、ヘッダー行（名前…ID…バージョン）を探す
-  const hi = lines.findIndex((l) => HEADER_WORDS.every(([ja, en]) => l.includes(ja) || l.includes(en)));
+  const hi = lines.findIndex((l) => HEADER_WORDS.slice(0, REQUIRED).every(([ja, en]) => l.includes(ja) || l.includes(en)));
   if (hi < 0) return { ok: false, reason: 'header not found', items: [] };
   const header = lines[hi];
-  const cols = HEADER_WORDS.map(([ja, en]) => {
-    const i = header.indexOf(ja) >= 0 ? header.indexOf(ja) : header.indexOf(en);
-    return displayWidth(header.slice(0, i));
-  });
+  // 実在する列だけ（省略された列は無いものとして扱う）
+  const present = HEADER_WORDS.map(([ja, en]) => ({ ja, en, i: header.indexOf(ja) >= 0 ? header.indexOf(ja) : header.indexOf(en) })).filter((c) => c.i >= 0);
+  const cols = present.map((c) => displayWidth(header.slice(0, c.i)));
+  const names = present.map((c) => c.en.toLowerCase());
   const items = [];
   for (const line of lines.slice(hi + 2)) {
     if (!line.trim() || /^-{5,}$/.test(line.trim())) continue;
     const cells = cols.map((start, i) => sliceByWidth(line, start, cols[i + 1] ?? null).trim());
-    let [name, id, version, available, source] = cells;
+    const cell = (n) => { const k = names.indexOf(n); return k >= 0 ? cells[k] : ''; };
+    let name = cell('name'); let id = cell('id'); let version = cell('version'); let available = cell('available'); let source = cell('source');
     // 幅ずれの保険：winget の ID は空白を含まない（ARP\… の ID はレジストリのキー名なので空白を含むことがある＝2026-10-22 実測で6件）。
     // winget の ID が崩れていたら、行を2つ以上の空白で分けて取り直す
     if (!id || (!/^(ARP|MSIX)\\/.test(id) && /\s/.test(id))) {
       const parts = line.trim().split(/\s{2,}/);
-      if (parts.length >= 3) { name = parts[0]; id = parts[1]; version = parts[2]; available = parts.length >= 5 ? parts[3] : ''; source = parts.at(-1); }
+      if (parts.length >= 3) { name = parts[0]; id = parts[1]; version = parts[2]; available = parts.length >= 5 ? parts[3] : ''; source = names.includes('source') ? parts.at(-1) : ''; }
     }
     if (!id) continue;
     const kind = id.startsWith('MSIX\\') ? 'msix' : id.startsWith('ARP\\') ? 'arp' : 'winget';

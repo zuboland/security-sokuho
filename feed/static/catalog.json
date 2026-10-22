@@ -134,13 +134,14 @@
       ],
       "msix": [],
       "arp": [
-        "^Adobe Acrobat( Reader)?"
+        "^Adobe Acrobat Reader"
       ],
       "update": {
         "kind": "winget",
         "id": "Adobe.Acrobat.Reader.64-bit"
       },
-      "class": "pdf"
+      "class": "pdf",
+      "note": "表示名「Adobe Acrobat (64-bit)」は Reader と Pro で同じなので拾わない（Pro に Reader の更新先を当てないため・監査R1 F04）"
     },
     {
       "key": "foxit",

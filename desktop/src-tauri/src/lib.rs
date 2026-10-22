@@ -1,9 +1,12 @@
 //! 緊急セキュリティ速報 デスクトップ — Rust 側。
 //! やること：winget の実行（一覧・更新）・レジストリの読み取り（入っている物・OS のビルド）・トレイ・通知。
 //! 🚨 PC の中身は外に出さない。通信するのは webview 側の fetch（公開フィード）と winget（Microsoft のソース）だけ。
+//! 🚨 winget の待ちはメインスレッドから外し、時間切れで止める（監査R1/R3：UAC 待ちで窓もトレイも固まった）。
 
 use serde::Serialize;
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::{Duration, Instant};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -16,47 +19,80 @@ use std::os::windows::process::CommandExt;
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
-#[derive(Serialize)]
+/// 更新は同時に1つだけ（二重実行の防止）
+static UPGRADE_RUNNING: AtomicBool = AtomicBool::new(false);
+
+#[derive(Serialize, Clone)]
 pub struct CmdOut {
     pub ok: bool,
     pub code: i32,
+    pub timed_out: bool,
     pub stdout: String,
     pub stderr: String,
 }
 
-fn run_cmd(prog: &str, args: &[&str]) -> CmdOut {
+/// 子プロセスを時間切れつきで実行する（時間切れなら kill）。呼び出しは spawn_blocking の中で行う
+fn run_cmd_timeout(prog: &str, args: &[&str], timeout: Duration) -> CmdOut {
     let mut c = Command::new(prog);
-    c.args(args);
+    c.args(args).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
     #[cfg(windows)]
     c.creation_flags(CREATE_NO_WINDOW);
-    match c.output() {
-        Ok(o) => CmdOut {
-            ok: o.status.success(),
-            code: o.status.code().unwrap_or(-1),
-            stdout: String::from_utf8_lossy(&o.stdout).to_string(),
-            stderr: String::from_utf8_lossy(&o.stderr).to_string(),
-        },
-        Err(e) => CmdOut { ok: false, code: -1, stdout: String::new(), stderr: format!("spawn failed: {e}") },
-    }
+    let mut child = match c.spawn() {
+        Ok(ch) => ch,
+        Err(e) => return CmdOut { ok: false, code: -1, timed_out: false, stdout: String::new(), stderr: format!("spawn failed: {e}") },
+    };
+    // 出力は別スレッドで読み続ける（パイプが詰まって止まらないように）
+    let mut out = child.stdout.take();
+    let mut err = child.stderr.take();
+    let th_out = std::thread::spawn(move || { let mut s = Vec::new(); if let Some(o) = out.as_mut() { let _ = std::io::Read::read_to_end(o, &mut s); } s });
+    let th_err = std::thread::spawn(move || { let mut s = Vec::new(); if let Some(o) = err.as_mut() { let _ = std::io::Read::read_to_end(o, &mut s); } s });
+    let start = Instant::now();
+    let mut timed_out = false;
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(st)) => break Some(st),
+            Ok(None) => {
+                if start.elapsed() > timeout { let _ = child.kill(); timed_out = true; break child.wait().ok(); }
+                std::thread::sleep(Duration::from_millis(250));
+            }
+            Err(_) => break None,
+        }
+    };
+    let stdout = String::from_utf8_lossy(&th_out.join().unwrap_or_default()).to_string();
+    let stderr = String::from_utf8_lossy(&th_err.join().unwrap_or_default()).to_string();
+    let code = status.and_then(|s| s.code()).unwrap_or(-1);
+    CmdOut { ok: !timed_out && code == 0, code, timed_out, stdout, stderr: if timed_out { format!("timed out after {}s\n{stderr}", timeout.as_secs()) } else { stderr } }
 }
 
-/// `winget list` の生の表を返す（解析は webview 側・固定応答でテストしている）
+/// `winget list` の生の表を返す（解析は webview 側・固定応答でテストしている）。3分で時間切れ
 #[tauri::command]
-fn winget_list() -> CmdOut {
-    run_cmd("winget", &["list", "--accept-source-agreements", "--disable-interactivity"])
+async fn winget_list() -> CmdOut {
+    tauri::async_runtime::spawn_blocking(|| run_cmd_timeout("winget", &["list", "--accept-source-agreements", "--disable-interactivity"], Duration::from_secs(180)))
+        .await
+        .unwrap_or_else(|e| CmdOut { ok: false, code: -1, timed_out: false, stdout: String::new(), stderr: format!("join failed: {e}") })
 }
 
-/// 1つの ID を更新する。ID は英数字と . + _ - だけ（コマンド注入を防ぐ）
+/// 1つの ID を更新する。ID は英数字と . + _ - だけ（コマンド注入を防ぐ）。15分で時間切れ（UAC を放置した等）
 #[tauri::command]
-fn winget_upgrade(id: String) -> CmdOut {
+async fn winget_upgrade(id: String) -> CmdOut {
     let re = regex::Regex::new(r"^[A-Za-z0-9.+_-]{2,120}$").unwrap();
     if !re.is_match(&id) {
-        return CmdOut { ok: false, code: -2, stdout: String::new(), stderr: "invalid id".into() };
+        return CmdOut { ok: false, code: -2, timed_out: false, stdout: String::new(), stderr: "invalid id".into() };
     }
-    run_cmd(
-        "winget",
-        &["upgrade", "--id", &id, "--exact", "--silent", "--accept-package-agreements", "--accept-source-agreements", "--disable-interactivity"],
-    )
+    if UPGRADE_RUNNING.swap(true, Ordering::SeqCst) {
+        return CmdOut { ok: false, code: -3, timed_out: false, stdout: String::new(), stderr: "another upgrade is running".into() };
+    }
+    let r = tauri::async_runtime::spawn_blocking(move || {
+        run_cmd_timeout(
+            "winget",
+            &["upgrade", "--id", &id, "--exact", "--silent", "--accept-package-agreements", "--accept-source-agreements", "--disable-interactivity"],
+            Duration::from_secs(15 * 60),
+        )
+    })
+    .await
+    .unwrap_or_else(|e| CmdOut { ok: false, code: -1, timed_out: false, stdout: String::new(), stderr: format!("join failed: {e}") });
+    UPGRADE_RUNNING.store(false, Ordering::SeqCst);
+    r
 }
 
 #[derive(Serialize)]

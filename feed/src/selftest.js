@@ -23,6 +23,8 @@ check('桁違いを文字列で比べない', compareVersions('156.0.8078.9', '1
 // 2. 悪用確認の文言
 check('in the wild の文の CVE を拾う', findExploitedCves('Fixed 3 bugs. Google is aware that an exploit for CVE-2026-999999 exists in the wild. Thanks.').includes('CVE-2026-999999'));
 check('別の文の CVE は拾わない', !findExploitedCves('CVE-2026-111111 was fixed. Google is aware of exploits in the wild for another product.').includes('CVE-2026-111111'));
+check('否定文（not aware）は悪用確認にしない', findExploitedCves('Google is not aware of an exploit for CVE-2026-222222 in the wild.').length === 0);
+check('否定文（no reports）は悪用確認にしない', findExploitedCves('There are no reports of CVE-2026-333333 being exploited in the wild.').length === 0);
 
 // 3. 壊れた入力で落ちる
 check('Chrome Releases の形違いで落ちる', throws(() => parseChromeReleases({ feed: {} })));
@@ -35,6 +37,8 @@ check('無い版数を書いた要約は捨てる', validateSummary({ summary_ja
 check('ある版数なら通る', validateSummary({ summary_ja: '156.0.8078.47 に更新', who_ja: 'a', action_ja: 'b' }, item) === null);
 check('電話番号は捨てる', validateSummary({ summary_ja: '0120-000-000 に電話', who_ja: 'a', action_ja: 'b' }, item) !== null);
 check('ダウンロード案内は捨てる', validateSummary({ summary_ja: 'ここからダウンロード', who_ja: 'a', action_ja: 'b' }, item) !== null);
+check('2要素の無い版数（26.01）も捨てる', validateSummary({ summary_ja: '7-Zip 26.01 に更新', who_ja: 'a', action_ja: 'b' }, { fixed_versions: {} }) !== null);
+check('ハイフン無しの電話番号・「電話」の指示は捨てる', validateSummary({ summary_ja: 'x', who_ja: 'a', action_ja: '0300000000 に電話してください' }, item) !== null);
 
 // 5. 組み立て：悪用確認つきの Chrome 投稿が速報になり、無いときは速報なし
 const now = new Date('2026-10-22T00:00:00Z');

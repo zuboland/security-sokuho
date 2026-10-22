@@ -62,7 +62,8 @@ export function actionTemplate(key, { fixedVersion } = {}) {
     case 'pdf':
       return 'PDF ソフトを開き、「ヘルプ」→「アップデートの有無をチェック」で更新する';
     case 'archiver':
-      return '公式サイトから最新版を入れ直す（配布元は公式サイトだけ。検索広告のリンクは使わない）';
+      // 🚨「ダウンロードを求めない」約束と矛盾しない言い方にする（監査R2）。配布先の URL は案内しない
+      return 'ソフト自身の更新機能か、Windows の「winget upgrade」で更新する。この速報がダウンロード先を案内することはありません';
     case 'runtime-java':
       return 'Java を使っていないなら削除してよい。使っているなら配布元（Oracle／Microsoft／Adoptium）の最新版に更新する';
     case 'messaging':

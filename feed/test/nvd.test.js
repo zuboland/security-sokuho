@@ -25,6 +25,7 @@ test('NVD: macOS の CVE は複数の系統（14／15／26）の範囲が別々�
 
 test('NVD: 形違い・CPE の分解', () => {
   assert.throws(() => parseNvd({}), /no cve/);
-  assert.deepEqual(parseCpe('cpe:2.3:a:google:chrome:*:*:*:*:*:*:*:*'), { part: 'a', vendor: 'google', product: 'chrome', version: '*' });
+  assert.deepEqual(parseCpe('cpe:2.3:a:google:chrome:*:*:*:*:*:*:*:*'), { part: 'a', vendor: 'google', product: 'chrome', version: '*', target_sw: null, target_hw: null });
+  assert.equal(parseCpe('cpe:2.3:a:videolan:vlc_media_player:3.0.23:*:*:*:*:android:*:*').target_sw, 'android', 'target_sw（OS）を捨てない');
   assert.equal(parseCpe('nonsense'), null);
 });

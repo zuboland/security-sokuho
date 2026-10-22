@@ -10,7 +10,8 @@ function renderStatus(state) {
   if (!r) { el.innerHTML = '<h2>確認中…</h2>'; return; }
   document.body.className = `is-${r.verdict}`;
   $('stripe').className = `stripe ${r.verdict === 'required' ? '' : r.verdict === 'unknown' ? 'amber' : 'quiet'}`;
-  $('time').textContent = state.checked_at ? new Date(state.checked_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) + ' 確認' : '';
+  // 「取得した時刻」と「配信が作られた時刻」は別物（監査R2/R3）
+  $('time').textContent = (state.checked_at ? new Date(state.checked_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) + ' 確認' : '') + (state.generated_at ? '／配信 ' + new Date(state.generated_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '');
   const n = name(r.browser);
   const ver = r.version ? esc(r.version) : '—';
 
@@ -37,6 +38,8 @@ function renderStatus(state) {
       no_data: `${n} の修正版の情報が取れていません（配信側の解析が止まっている可能性）`,
       no_version: 'ブラウザの版数を取得できませんでした',
       fetch_failed: `速報の配信元に届きませんでした${state.fetch_error ? '（' + esc(state.fetch_error) + '）' : ''}`,
+      bad_feed: `配信の形が想定と違います（${esc(r.detail || '')}）。配信側の不具合の可能性があるので、古い判定は使いません`,
+      stale: `配信が ${r.generated_at ? esc(new Date(r.generated_at).toLocaleString('ja-JP')) : '不明な時刻'} から更新されていません。古い情報で「大丈夫」とは言いません`,
       compare_failed: '版数の形が想定と違います',
     }[r.reason] || '確認できませんでした';
     el.innerHTML = `
@@ -71,8 +74,11 @@ function postsHtml(i) {
 function renderAlerts(state) {
   const items = state?.alerts || [];
   const el = $('alerts');
-  if (!items.length) { el.innerHTML = '<p class="tiny">直近90日に、一般の人に関係する「悪用確認済み」の速報はありません。</p>'; return; }
-  el.innerHTML = items.slice(0, 8).map((i) => `
+  if (state && state.alerts_ok === false) { el.innerHTML = '<p class="tiny">速報の一覧を取得できませんでした（配信元に届かないか、形が違います）。</p>'; return; }
+  const days = state?.window_days || null;
+  const failed = (state?.sources_failed || []).length ? `<p class="tiny">※ 情報源のうち取れていないもの：${esc(state.sources_failed.join('・'))}</p>` : '';
+  if (!items.length) { el.innerHTML = `<p class="tiny">直近${days ? days + '日' : 'の期間'}に、一般の人に関係する「悪用確認済み」の速報はありません。</p>${failed}`; return; }
+  el.innerHTML = failed + items.slice(0, 8).map((i) => `
     <div class="row">
       <div class="t"><span class="tag">${esc(i.product_label || '')}</span>${esc(i.title_ja || i.title || '')}</div>
       <div class="tiny mono">${esc(i.published || '')}${cveLine(i)}</div>

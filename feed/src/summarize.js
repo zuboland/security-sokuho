@@ -36,8 +36,9 @@ function buildPrompt(item) {
   ].join('\n');
 }
 
-const VERSION_RE = /\b\d+\.\d+\.\d+(\.\d+)?\b/g;
-const PHONE_RE = /0\d{1,4}-\d{1,4}-\d{3,4}|\b0120[-\d]+/;
+// 2要素の版数（7-Zip 26.05 など）も見る（監査R2）。電話はハイフン無しの10〜11桁と「電話」の指示も拒否
+const VERSION_RE = /\b\d+\.\d+(?:\.\d+){0,2}\b/g;
+const PHONE_RE = /0\d{1,4}-\d{1,4}-\d{3,4}|\b0120[-\d]+|\b0\d{9,10}\b|電話/;
 
 /** AIの出力を検査する。通らなければ理由を返す（null なら合格） */
 export function validateSummary(out, item) {
@@ -48,7 +49,8 @@ export function validateSummary(out, item) {
     if (PHONE_RE.test(out[k])) return `${k} has phone number`;
     if (/ダウンロード|download|http/i.test(out[k])) return `${k} has download/url`;
   }
-  const allowed = new Set(Object.values(item.fixed_versions));
+  // 入力（修正版・原文）にある版数だけを許す
+  const allowed = new Set([...Object.values(item.fixed_versions || {}), ...((`${item.summary || ''} ${item.summary_ja || ''} ${item.title || ''}`).match(VERSION_RE) || [])]);
   const text = `${out.summary_ja} ${out.who_ja} ${out.action_ja}`;
   for (const v of text.match(VERSION_RE) || []) {
     if (!allowed.has(v)) return `version ${v} not in item`;
@@ -113,7 +115,7 @@ export async function applySummaries(items, { provider = PROVIDER, maxPerRun = M
       const out = parseJson(r.text);
       const why = validateSummary(out, item);
       if (why) { console.warn(`[summarize] ${item.id} を捨てた: ${why}`); continue; }
-      const record = { ...pick(out), model: r.model, created_at: new Date().toISOString() };
+      const record = { summary_ja: out.summary_ja, who_ja: out.who_ja, action_ja: out.action_ja, model: r.model, created_at: new Date().toISOString() }; // 保存は3つ・使うのは要約だけ
       await writeFile(path.join(SUMMARY_DIR, `${item.id}.json`), JSON.stringify(record, null, 1) + '\n');
       Object.assign(item, pick(out));
       item.summary_by = r.model;
@@ -124,6 +126,7 @@ export async function applySummaries(items, { provider = PROVIDER, maxPerRun = M
   return items;
 }
 
+/** item に載せるのは要約だけ。「誰に」「今やること」は機械生成の定型を保つ（AI の自由文で手順を上書きしない・監査R1 F11） */
 function pick(o) {
-  return { summary_ja: o.summary_ja, who_ja: o.who_ja, action_ja: o.action_ja };
+  return { summary_ja: o.summary_ja };
 }

@@ -28,12 +28,16 @@ export function htmlToText(html) {
     .trim();
 }
 
-/** 「in the wild」を含む文に出てくる CVE を悪用確認済みとして拾う */
+/** 悪用を否定する言い回し（これがある文は悪用確認に使わない・監査R1 F08） */
+export const NEGATION_RE = /\bnot aware\b|\bno (known )?(reports?|evidence)\b|\bnot (been )?(exploited|observed)\b|\bunaware\b|\bno exploit/i;
+
+/** 「in the wild」を含む肯定文に出てくる CVE を悪用確認済みとして拾う */
 export function findExploitedCves(text) {
   const out = new Set();
   const sentences = text.split(/(?<=[.!?])\s+|\n/);
   for (const s of sentences) {
     if (!/in the wild/i.test(s)) continue;
+    if (NEGATION_RE.test(s)) continue;
     for (const c of s.match(CVE_RE) || []) out.add(c);
   }
   return [...out];

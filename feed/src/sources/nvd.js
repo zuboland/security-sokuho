@@ -15,7 +15,9 @@ const REFRESH_DAYS = 30;
 export function parseCpe(criteria) {
   const p = String(criteria || '').split(':');
   if (p.length < 6 || p[0] !== 'cpe' || p[1] !== '2.3') return null;
-  return { part: p[2], vendor: p[3], product: p[4], version: p[5] };
+  const norm = (x) => (x === undefined || x === '*' || x === '-' ? null : x);
+  // cpe:2.3:part:vendor:product:version:update:edition:language:sw_edition:target_sw:target_hw:other
+  return { part: p[2], vendor: p[3], product: p[4], version: p[5], target_sw: norm(p[10]), target_hw: norm(p[11]) };
 }
 
 /** NVD の応答から、脆弱な（vulnerable=true）範囲だけを平らに取り出す */
@@ -24,6 +26,10 @@ export function parseNvd(json) {
   if (!v) throw new Error('no cve in response');
   const ranges = [];
   for (const conf of v.configurations || []) {
+    // AND 条件の OS（例：この欠陥は macOS 上でだけ成立）を持っておく。Windows の常駐アプリは macOS 限定の範囲を使わない（監査R1 F09）
+    const osOnly = (conf.operator === 'AND')
+      ? [...new Set((conf.nodes || []).flatMap((n) => (n.cpeMatch || []).map((m) => parseCpe(m.criteria)).filter((c) => c && c.part === 'o').map((c) => `${c.vendor}:${c.product}`)))]
+      : [];
     for (const node of conf.nodes || []) {
       for (const m of node.cpeMatch || []) {
         if (!m.vulnerable) continue;
@@ -31,6 +37,8 @@ export function parseNvd(json) {
         if (!c) continue;
         ranges.push({
           part: c.part, vendor: c.vendor, product: c.product,
+          target_sw: c.target_sw, // android／macos／windows など。null＝指定なし
+          os_only: osOnly,
           version: c.version === '*' || c.version === '-' ? null : c.version, // 特定の版だけが対象のとき
           start_incl: m.versionStartIncluding || null,
           start_excl: m.versionStartExcluding || null,
@@ -41,7 +49,9 @@ export function parseNvd(json) {
     }
   }
   const cvss = v.metrics?.cvssMetricV31?.[0]?.cvssData?.baseScore ?? v.metrics?.cvssMetricV40?.[0]?.cvssData?.baseScore ?? null;
-  return { cve: v.id, published: v.published || null, last_modified: v.lastModified || null, cvss, ranges };
+  // NVD の解析状態（Awaiting Analysis 等）。範囲が空のときは「未解析」と「本当に無い」を区別する材料
+  const status = ranges.length ? 'analyzed' : /analyzed|modified/i.test(v.vulnStatus || '') ? 'no_ranges' : 'awaiting';
+  return { cve: v.id, published: v.published || null, last_modified: v.lastModified || null, cvss, vuln_status: v.vulnStatus || null, status, ranges };
 }
 
 async function loadCached(cve) {
@@ -59,12 +69,15 @@ export async function collectAffected(cves, { maxCalls = Number(process.env.SECA
   const key = process.env.NVD_API_KEY || null;
   const interval = process.env.SECALERT_FIXTURES ? 0 : key ? 700 : 6500; // 5回/30秒を守る（余裕を持たせる）。固定応答のときは待たない
   const out = {};
+  const pending = []; // 頼まれたのに取れなかった CVE（上限・失敗）。常駐アプリは「範囲なし」と区別して判定不能にする
   let calls = 0;
   for (const cve of [...new Set(cves)].filter((c) => /^CVE-\d{4}-\d+$/.test(c))) {
     const cached = await loadCached(cve);
-    const fresh = cached && now - new Date(cached.fetched_at).getTime() < REFRESH_DAYS * 86400000;
+    // 未解析（範囲が空）は1日で取り直す（監査R3：NVD が翌日に範囲を足しても30日反映されなかった）
+    const ttlDays = cached && cached.ranges?.length ? REFRESH_DAYS : 1;
+    const fresh = cached && now - new Date(cached.fetched_at).getTime() < ttlDays * 86400000;
     if (cached && (fresh || calls >= maxCalls)) { out[cve] = cached; continue; }
-    if (calls >= maxCalls) continue;
+    if (calls >= maxCalls) { pending.push(cve); continue; }
     calls++;
     try {
       if (calls > 1) await sleep(interval);
@@ -74,8 +87,9 @@ export async function collectAffected(cves, { maxCalls = Number(process.env.SECA
       out[cve] = rec;
     } catch (e) {
       console.warn(`[nvd] ${cve}: ${e.message}`);
-      if (cached) out[cve] = cached;
+      if (cached) out[cve] = cached; else pending.push(cve);
     }
   }
+  Object.defineProperty(out, '__pending', { value: pending, enumerable: false });
   return out;
 }

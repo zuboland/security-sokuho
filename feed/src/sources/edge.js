@@ -2,7 +2,7 @@
 // 「Microsoft Edge for Stable (Version x.y.z.w)」と「CVE-… has an exploit in the wild」を拾う。
 // HTML が変わって取れないときは判定不能にする（無理に出さない）。
 import { fetchText, SourceError } from '../fetch.js';
-import { htmlToText } from './chrome_releases.js';
+import { htmlToText, NEGATION_RE } from './chrome_releases.js';
 
 export const EDGE_URL = 'https://learn.microsoft.com/en-us/deployedge/microsoft-edge-relnotes-security';
 
@@ -20,6 +20,7 @@ export function parseEdge(html) {
     const exploited = new Set();
     for (const s of text.split(/(?<=[.!?])\s+|\n/)) {
       if (!/exploit in the wild/i.test(s)) continue;
+      if (NEGATION_RE.test(s)) continue; // 「not aware of an exploit in the wild」は悪用確認ではない
       for (const c of s.match(CVE_RE) || []) exploited.add(c);
     }
     out.push({

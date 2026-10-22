@@ -47,7 +47,9 @@
   </table>
 
   <h2>常駐アプリ（Windows）について</h2>
-  <p>常駐アプリも同じ方針です。PC に入っているソフトの一覧（<code>winget list</code>・レジストリの表示名と版数・Windows のビルド番号）は<b>PC の中だけで</b>公開フィードと比べ、外には送りません。外へ出る通信は、公開フィードの取得と、あなたが「更新する」を押したときの <code>winget</code>（Microsoft のソースからの取得）だけです。判定結果・通知の既読・設定はアプリのデータ領域（WebView2）に保存され、アンインストール時に Windows の仕組みに従って扱われます。</p>
+  <p>常駐アプリも同じ方針です。PC に入っているソフトの一覧（<code>winget list</code>・レジストリの表示名と版数・Windows のビルド番号）は<b>PC の中だけで</b>公開フィードと比べ、このアプリが外へ送ることはありません。判定結果・通知の既読・設定はアプリのデータ領域（WebView2）に保存され、アンインストール時に Windows の仕組みに従って扱われます。</p>
+  <p><b>winget について（正直に書きます）。</b>常駐アプリは起動時と6時間ごとの確認で Windows の <code>winget list</code> を実行します。<code>winget</code> は Microsoft のパッケージ管理ツールで、一覧を作るときにソース（Microsoft の winget／msstore）へ照会し、更新を押したときは配布元から取得します。また <code>winget</code> 自体は Windows の診断データ設定に従って利用状況を Microsoft に送ることがあります（<a href="https://github.com/microsoft/winget-cli#datatelemetry" target="_blank" rel="noopener">winget の説明</a>）。このアプリはその設定を変えませんし、読みもしません。「winget を一切動かしたくない」場合は、このアプリを使わないでください。</p>
+  <p><b>公開フィードの配信元について。</b>フィードは GitHub Pages で配信しています。このアプリ・拡張は利用者を識別する情報を付けませんが、GitHub は通信に伴うアクセス元の IP アドレス等を自社のポリシーに従って保存することがあります（<a href="https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages#data-collection" target="_blank" rel="noopener">GitHub の説明</a>）。これは私たち（ZUBOLAND）には届きません。</p>
 
   <h2>外部サービスへのリンク</h2>
   <p>速報の一覧には、一次情報（Google・Microsoft・CISA・JPCERT/CC・IPA）や、関連する投稿（Hacker News・X）へのリンクが含まれます。リンクを開いたあとの取り扱いは、それぞれのサービスのポリシーに従います。この拡張がそれらのサービスにあなたの情報を送ることはありません。</p>

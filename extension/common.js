@@ -71,6 +71,33 @@ function behindLatest(version, b) {
   return c === null ? null : c < 0;
 }
 
+/** 配信の鮮度。30分ごとの配信が 24 時間止まっていたら「古い」（古い安全判定を現在の確認として出さない・監査R2/R3） */
+export const STALE_HOURS = 24;
+export function isStale(status, now = Date.now()) {
+  const t = status?.generated_at ? Date.parse(status.generated_at) : NaN;
+  if (Number.isNaN(t)) return true;
+  return now - t > STALE_HOURS * 3600 * 1000;
+}
+
+/** 配信の形の検査。壊れた JSON を「速報なし」と読まない（監査R3）。通ったら null、駄目なら理由 */
+export function validateBrowsers(b) {
+  if (!b || typeof b !== 'object' || b.schema !== 1) return 'schema';
+  for (const key of ['chrome', 'edge']) {
+    const x = b[key];
+    if (!x || typeof x !== 'object') return `${key} missing`;
+    if (!['ok', 'unknown'].includes(x.status)) return `${key}.status`;
+    if (!(x.min_safe === null || (typeof x.min_safe === 'string' && /^\d+(\.\d+){1,3}$/.test(x.min_safe)))) return `${key}.min_safe`;
+    if (!Array.isArray(x.exploited_cves)) return `${key}.exploited_cves`;
+  }
+  return null;
+}
+export function validateAlerts(a) {
+  if (!a || typeof a !== 'object' || a.schema !== 1) return 'schema';
+  if (!Array.isArray(a.items)) return 'items';
+  if (!a.items.every((i) => i && typeof i === 'object' && typeof i.id === 'string')) return 'item';
+  return null;
+}
+
 export function settingsUrl(browser) {
   return browser === 'edge' ? 'edge://settings/help' : 'chrome://settings/help';
 }
