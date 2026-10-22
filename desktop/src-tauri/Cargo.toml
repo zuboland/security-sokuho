@@ -1,6 +1,6 @@
 [package]
 name = "security-sokuho-desktop"
-version = "0.1.0"
+version = "0.1.1"
 description = "緊急セキュリティ速報 デスクトップ"
 authors = ["ZUBOLAND Inc."]
 license = "MIT"

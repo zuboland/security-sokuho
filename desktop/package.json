@@ -1,6 +1,6 @@
 {
   "name": "security-sokuho-desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "緊急セキュリティ速報 デスクトップ — PCに入っているソフトを公開フィードと照合し、要対応だけ知らせる常駐アプリ（Windows）",
   "type": "module",

@@ -35,10 +35,8 @@ jobs:
         run: npm ci --no-audit --no-fund
         working-directory: desktop
       - name: 署名ツール（Trusted Signing dlib）を用意
-        if: ${{ env.AZURE_CLIENT_ID != '' }}
+        if: ${{ secrets.AZURE_CLIENT_ID != '' }}
         shell: pwsh
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
         run: |
           nuget install Microsoft.Trusted.Signing.Client -Version 1.0.53 -OutputDirectory "$env:RUNNER_TEMP\tsc" -x
           echo "TRUSTED_SIGNING_DIR=$env:RUNNER_TEMP\tsc\Microsoft.Trusted.Signing.Client" >> $env:GITHUB_ENV
