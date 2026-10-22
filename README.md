@@ -93,7 +93,7 @@ AI の出力は機械で検査し、**その件に無い版数・電話番号・
 - 判定の材料：`affected.json`（NVD の CPE と修正版の範囲）× `catalog.json`（winget の ID／レジストリの表示名 → CPE の対応表）× `winget list`／レジストリ
 - 3値：要対応／対応済み／判定不能。対応表に無い物は「分からない」ので出しません（設定で見ている製品を確認できます）。Windows 本体はこの版では判定せず「Windows Update を開く」だけ
 - PC の中身は外に送りません。通信は公開フィードの取得と、更新時の winget（Microsoft のソース）だけ
-- インストーラーは ZUBOLAND株式会社 の証明書で署名（Azure Trusted Signing）。[Releases](https://github.com/zuboland/security-sokuho/releases) から
+- 配布は [Releases](https://github.com/zuboland/security-sokuho/releases) から。署名（ZUBOLAND株式会社・Azure Trusted Signing）は鍵を持つ CI のビルドだけに付きます。**プレリリースは未署名のことがあり、その場合は Releases の説明にそう書きます**（SmartScreen の警告が出ます）
 - 開発：`cd desktop && npm ci && npm test`（winget の実出力 243 行を固定応答にした解析・判定テスト）／`npm run dev`（Rust ツールチェーンが要ります）
 - 対応表の実在検査：`python tools/catalog_check.py`（winget の ID と NVD の CPE が本当にあるか。手書きの表は必ず古くなるため）
 

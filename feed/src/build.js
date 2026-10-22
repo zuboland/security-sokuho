@@ -275,6 +275,9 @@ export async function collect() {
   ]);
   const got = Object.fromEntries(results.map((r) => [r.name, r.ok ? r.value : null]));
   const failed = results.filter((r) => !r.ok).map((r) => ({ source: r.name, error: r.error }));
+  // 🚨 取れたのに『空』は失敗と同じ扱い（空の KEV や 0 件の Chrome で min_safe=null を配信すると速報が消える）
+  if (got.chrome_releases && got.chrome_releases.length === 0) { failed.push({ source: 'chrome_releases', error: 'empty (0 posts)' }); got.chrome_releases = null; }
+  if (got.kev && (!got.kev.items || got.kev.items.length < 100)) { failed.push({ source: 'kev', error: `too few entries (${got.kev?.items?.length ?? 0})` }); got.kev = null; }
   const cves = new Set();
   for (const p of got.chrome_releases || []) p.exploited_cves.forEach((c) => cves.add(c));
   for (const k of got.kev?.items || []) cves.add(k.cve);

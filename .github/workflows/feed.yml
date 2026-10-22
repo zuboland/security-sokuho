@@ -51,11 +51,20 @@ jobs:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
           SECALERT_NVD_MAX: ${{ vars.SECALERT_NVD_MAX || '40' }}
       - name: 要約と関連ポストのキャッシュをコミット（リポジトリがキャッシュ＝フォークした人も日本語要約を持てる・X は1件1回だけ）
+        # 🚨 人の push と衝突すると push が拒否される（2026-10-22 実測＝その回の Pages 配信まで止まった）。
+        #    rebase して3回まで試し、それでも駄目なら「配信は続ける」（キャッシュは次の回に取り直せる）
+        continue-on-error: true
         run: |
           git config user.name "secalert-bot"
           git config user.email "secalert-bot@users.noreply.github.com"
           git add feed/data/summaries feed/data/posts feed/data/affected
-          git diff --cached --quiet || git commit -m "chore: 要約・関連ポスト・影響範囲のキャッシュを更新" && git push
+          if git diff --cached --quiet; then echo "no cache changes"; exit 0; fi
+          git commit -m "chore: 要約・関連ポスト・影響範囲のキャッシュを更新"
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "push retry $i"; sleep 10
+          done
+          echo "::warning::キャッシュのコミットを push できませんでした（配信は続けます）"; exit 1
       - uses: actions/upload-pages-artifact@v3
         with:
           path: feed/public
