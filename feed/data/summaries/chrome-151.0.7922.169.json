@@ -1,0 +1,7 @@
+{
+ "summary_ja": "Google Chrome で、安全上の問題15件を直す更新が公開されました。問題の詳しい内容はまだ公開されていませんが、悪用は確認されていません。",
+ "who_ja": "パソコン（Windows・Mac・Linux）で Google Chrome を使っている人に関係します。",
+ "action_ja": "Chrome の右上「︙」から「ヘルプ」→「Google Chrome について」を開き、151.0.7922.169 以上への更新が終わったら「再起動」を押してください（1分ほど）。",
+ "model": "claude-opus-5-5",
+ "created_at": "2026-10-22T00:51:36.610Z"
+}
