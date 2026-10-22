@@ -1,16 +1,33 @@
 {
   "manifest_version": 3,
   "name": "緊急セキュリティ速報",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "悪用が確認された脆弱性で、あなたのブラウザが影響を受けるときだけ知らせます。めったに鳴りません。電話やダウンロードを求めることは一切ありません。",
-  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "homepage_url": "https://github.com/zuboland/security-sokuho",
-  "permissions": ["alarms", "notifications", "storage"],
-  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": [
+    "alarms",
+    "notifications",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_title": "緊急セキュリティ速報",
-    "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png" }
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    }
   },
-  "options_ui": { "page": "options.html", "open_in_tab": false }
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  }
 }

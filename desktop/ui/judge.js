@@ -171,7 +171,8 @@ export function judge({ installed, catalog, affected, feed, browsers = null }) {
     products.push({
       key: p.key, label: p.label, class: p.class, update: p.update,
       instances: instances.map((i) => ({ key: i.key, version: i.version, raw_version: i.raw_version, winget_id: i.winget_id, available: i.available })),
-      installed: hits, version: instances[0]?.version || null, raw_version: instances.map((i) => i.raw_version).filter(Boolean).join(' / ') || null,
+      // 表示用の版数は同じ値を1つにまとめる（Python は部品ごとの ARP 登録が11行あり、同じ版数が10回並んだ）
+      installed: hits, version: instances[0]?.version || null, raw_version: [...new Set(instances.map((i) => i.raw_version).filter(Boolean))].join(' / ') || null,
       available: instances.map((i) => i.available).find(Boolean) || null,
       verdict, notify, findings,
     });
