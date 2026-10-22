@@ -104,6 +104,33 @@ test('判定：同じ実体が winget とレジストリで2行なら新しい�
   assert.equal(edge.verdict, 'required'); assert.ok(edge.notify); assert.equal(edge.findings[0].from, 'browsers');
 });
 
+test('判定（R4）：ARP の別スコープ・winget と別系列の ARP は別実体／未解析（awaiting）と一部 pending は unknown／CPE 無しは速報が無くても unknown', () => {
+  // 同じ表示名の 7-Zip が Machine と User に1つずつ → 別実体。古い方が当たれば required
+  let r = J({ installed: [
+    { kind: 'arp', id: 'ARP\\Machine\\X64\\7-Zip', name: '7-Zip 26.05 (x64)', version: '26.05' },
+    { kind: 'arp', id: 'ARP\\User\\X64\\7-Zip', name: '7-Zip 26.02 (x64)', version: '26.02' },
+  ] });
+  const sz = r.products.find((p) => p.key === '7zip');
+  assert.equal(sz.instances.length, 2); assert.equal(sz.verdict, 'required');
+  // winget の JDK 21 と ARP の JDK 17 → 別実体（版数の先頭3つが違う）。17 が当たれば required
+  const aff = { cves: { 'CVE-2026-44444': { status: 'analyzed', ranges: [{ part: 'a', vendor: 'oracle', product: 'openjdk', start_incl: '17.0.0', end_excl: '17.0.11' }] } }, pending: [] };
+  const fd = { items: [{ id: 'kev-jdk', title: 'OpenJDK の欠陥', products: ['runtime-java'], severity: 'critical', exploited: true, exploited_cves: ['CVE-2026-44444'], cves: ['CVE-2026-44444'] }] };
+  r = J({ installed: [{ kind: 'winget', id: 'Microsoft.OpenJDK.21', name: 'Microsoft Build of OpenJDK 21', version: '21.0.5' }, { kind: 'arp', id: 'ARP\\Machine\\X64\\jdk17', name: 'Microsoft Build of OpenJDK 17', version: '17.0.10' }], affected: aff, feed: fd });
+  const jdk = r.products.find((p) => p.key === 'java_microsoft');
+  assert.equal(jdk.instances.length, 2); assert.equal(jdk.verdict, 'required');
+  assert.equal(jdk.findings.find((f) => f.verdict === 'required').winget_id, null, 'ARP だけの実体には winget の ID を当てない');
+  // 未解析（Awaiting Analysis・範囲なし）→ unknown
+  const sz1 = [{ kind: 'winget', id: '7zip.7zip', name: '7-Zip', version: '26.02' }];
+  r = J({ installed: sz1, affected: { cves: { 'CVE-2026-99999': { status: 'awaiting', ranges: [] } }, pending: [] } });
+  assert.equal(r.products[0].verdict, 'unknown');
+  // 一部の CVE が pending：既知の範囲に当たらなければ unknown（ok にしない）
+  r = J({ installed: sz1, feed: { items: [{ id: 'kev-two', title: '7-Zip 2件', products: ['archiver'], severity: 'critical', exploited: true, exploited_cves: ['CVE-2026-99999', 'CVE-2026-99998'], cves: ['CVE-2026-99999', 'CVE-2026-99998'] }] }, affected: { cves: { 'CVE-2026-99999': { status: 'analyzed', ranges: [{ part: 'a', vendor: '7-zip', product: '7-zip', end_excl: '26.01' }] } }, pending: ['CVE-2026-99998'] } });
+  assert.equal(r.products[0].verdict, 'unknown');
+  // CPE 対応表が無い製品（slack）は速報が無くても unknown（安全確認にしない）
+  r = J({ installed: [{ kind: 'winget', id: 'SlackTechnologies.Slack', name: 'Slack', version: '4.0.0' }], feed: { items: [] }, affected: { cves: {}, pending: [] } });
+  assert.equal(r.products[0].verdict, 'unknown'); assert.equal(r.products[0].findings[0].why, 'no_cpe');
+});
+
 test('範囲の比較：境界・「範囲なし」・end_incl は修正版にしない・他OS限定は Windows に当てない', () => {
   assert.equal(inRange('1.0.0', { end_excl: '1.0.0' }), false);
   assert.equal(inRange('0.9.9', { end_excl: '1.0.0' }), true);

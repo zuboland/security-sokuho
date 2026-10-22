@@ -25,12 +25,14 @@ export function parseNvd(json) {
   const v = json?.vulnerabilities?.[0]?.cve;
   if (!v) throw new Error('no cve in response');
   const ranges = [];
+  const osOf = (nodes) => [...new Set(nodes.flatMap((n) => (n.cpeMatch || []).map((m) => parseCpe(m.criteria)).filter((c) => c && c.part === 'o').map((c) => `${c.vendor}:${c.product}`)))];
   for (const conf of v.configurations || []) {
-    // AND 条件の OS（例：この欠陥は macOS 上でだけ成立）を持っておく。Windows の常駐アプリは macOS 限定の範囲を使わない（監査R1 F09）
-    const osOnly = (conf.operator === 'AND')
-      ? [...new Set((conf.nodes || []).flatMap((n) => (n.cpeMatch || []).map((m) => parseCpe(m.criteria)).filter((c) => c && c.part === 'o').map((c) => `${c.vendor}:${c.product}`)))]
-      : [];
+    // AND 条件の OS（例：この欠陥は macOS 上でだけ成立）を持っておく。Windows の常駐アプリは macOS 限定の範囲を使わない（監査R1 F09）。
+    // configuration 直下の AND と、node 自身の AND の両方を見る（監査R4-M4）
+    const confOs = conf.operator === 'AND' ? osOf(conf.nodes || []) : [];
     for (const node of conf.nodes || []) {
+      const nodeOs = node.operator === 'AND' ? osOf([node]) : [];
+      const osOnly = [...new Set([...confOs, ...nodeOs])];
       for (const m of node.cpeMatch || []) {
         if (!m.vulnerable) continue;
         const c = parseCpe(m.criteria);
@@ -51,8 +53,11 @@ export function parseNvd(json) {
   const cvss = v.metrics?.cvssMetricV31?.[0]?.cvssData?.baseScore ?? v.metrics?.cvssMetricV40?.[0]?.cvssData?.baseScore ?? null;
   // NVD の解析状態（Awaiting Analysis 等）。範囲が空のときは「未解析」と「本当に無い」を区別する材料
   const status = ranges.length ? 'analyzed' : /analyzed|modified/i.test(v.vulnStatus || '') ? 'no_ranges' : 'awaiting';
-  return { cve: v.id, published: v.published || null, last_modified: v.lastModified || null, cvss, vuln_status: v.vulnStatus || null, status, ranges };
+  return { format: FORMAT, cve: v.id, published: v.published || null, last_modified: v.lastModified || null, cvss, vuln_status: v.vulnStatus || null, status, ranges };
 }
+
+/** キャッシュの解析形式の版。上げると古いキャッシュは期限内でも取り直す（監査R4-M5：target_sw を持たない旧形式が残った） */
+export const FORMAT = 2;
 
 async function loadCached(cve) {
   try { return JSON.parse(await readFile(path.join(AFFECTED_DIR, `${cve}.json`), 'utf8')); } catch { return null; }
@@ -72,12 +77,17 @@ export async function collectAffected(cves, { maxCalls = Number(process.env.SECA
   const pending = []; // 頼まれたのに取れなかった CVE（上限・失敗）。常駐アプリは「範囲なし」と区別して判定不能にする
   let calls = 0;
   for (const cve of [...new Set(cves)].filter((c) => /^CVE-\d{4}-\d+$/.test(c))) {
-    const cached = await loadCached(cve);
+    let cached = await loadCached(cve);
+    if (cached && cached.format !== FORMAT) cached = { ...cached, fetched_at: '1970-01-01T00:00:00Z', stale_format: true }; // 旧形式＝期限切れ扱い（取り直せなければ pending に落ちる）
     // 未解析（範囲が空）は1日で取り直す（監査R3：NVD が翌日に範囲を足しても30日反映されなかった）
     const ttlDays = cached && cached.ranges?.length ? REFRESH_DAYS : 1;
     const fresh = cached && now - new Date(cached.fetched_at).getTime() < ttlDays * 86400000;
-    if (cached && (fresh || calls >= maxCalls)) { out[cve] = cached; continue; }
-    if (calls >= maxCalls) { pending.push(cve); continue; }
+    if (cached && fresh) { out[cve] = cached; continue; }
+    if (calls >= maxCalls) {
+      // 上限で取り直せないとき：新しい形式のキャッシュは使う。旧形式は「未確認」として pending に落とす（OS 条件が無いまま判定しない）
+      if (cached && !cached.stale_format) out[cve] = cached; else pending.push(cve);
+      continue;
+    }
     calls++;
     try {
       if (calls > 1) await sleep(interval);
@@ -87,7 +97,7 @@ export async function collectAffected(cves, { maxCalls = Number(process.env.SECA
       out[cve] = rec;
     } catch (e) {
       console.warn(`[nvd] ${cve}: ${e.message}`);
-      if (cached) out[cve] = cached; else pending.push(cve);
+      if (cached && !cached.stale_format) out[cve] = cached; else pending.push(cve);
     }
   }
   Object.defineProperty(out, '__pending', { value: pending, enumerable: false });

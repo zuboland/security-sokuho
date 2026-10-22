@@ -48,15 +48,19 @@ export function appliesToWindows(r) {
 function groupInstances(product, hits) {
   const groups = new Map();
   for (const h of hits) {
-    const key = h.kind === 'winget' ? `winget:${h.id}` : h.kind === 'msix' ? `msix:${h.id.replace(/^MSIX\\/, '').split('_')[0]}` : `arp:${(h.name || '').toLowerCase()}`;
+    // ARP はスコープ付きの ID（ARP\Machine\X64\…）で分ける。表示名でまとめると User と Machine の別インストールが潰れる（監査R4-H3）
+    const key = h.kind === 'winget' ? `winget:${h.id}` : h.kind === 'msix' ? `msix:${h.id.replace(/^MSIX\\/, '').split('_')[0]}` : `arp:${h.id}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(h);
   }
-  // winget とレジストリで同じ製品が1行ずつ出るときは同一実体とみなす（版数は新しい方）。ただし winget の ID が複数あれば別実体
+  // winget とレジストリの行を同一実体とみなすのは「版数の先頭3つが一致する」組だけ。確認できない行は別実体として判定する
   const wingetKeys = [...groups.keys()].filter((k) => k.startsWith('winget:'));
-  if (wingetKeys.length === 1) {
-    const main = groups.get(wingetKeys[0]);
-    for (const [k, v] of groups) if (!k.startsWith('winget:')) { main.push(...v); groups.delete(k); }
+  const head3 = (v) => { const n = normalizeVersion(v); return n ? n.split('.').slice(0, 3).join('.') : null; };
+  for (const [k, v] of [...groups]) {
+    if (k.startsWith('winget:')) continue;
+    const mine = head3(v[0]?.version);
+    const owner = wingetKeys.find((wk) => mine && head3(groups.get(wk)[0]?.version) === mine);
+    if (owner) { groups.get(owner).push(...v); groups.delete(k); }
   }
   return [...groups.entries()].map(([key, list]) => {
     // 版数は winget の値を優先（レジストリは「3.12.10150.0」のようにビルド番号を混ぜる＝2026-10-22 実測。最大値を採ると偽の ok になる）
@@ -76,15 +80,23 @@ function groupInstances(product, hits) {
 }
 
 /** 1つの実体 × 1つの速報 の判定 */
-function judgeInstance(inst, item, ranges, pending) {
+function judgeInstance(inst, item, ranges, pending, cveMap, cpes) {
   const cves = item.exploited_cves?.length ? item.exploited_cves : item.cves.slice(0, 3);
   if (!inst.version) return { verdict: 'unknown', why: 'version', fixed: [], also_affected: [] };
+  // CVE ごとの取得状態：未取得（pending）・未解析（awaiting）・取得自体が無い → その CVE は「まだ分からない」（監査R4-H4）
+  const unresolved = cves.filter((c) => pending.has(c) || !cveMap[c] || cveMap[c].status === 'awaiting');
   const usable = ranges.filter(appliesToWindows);
-  if (usable.length === 0) {
-    // 範囲が無い理由：未取得（pending）なら分からない。取得済みで無ければ「この製品には当たらない」
-    return cves.some((c) => pending.has(c)) ? { verdict: 'unknown', why: 'pending', fixed: [], also_affected: [] } : null;
-  }
   const results = usable.map((r) => ({ r, hit: inRange(inst.version, r) }));
+  if (results.some((x) => x.hit === true)) {
+    // 既知の範囲に当たれば required（他の CVE が未解決でも変えない）
+  } else if (unresolved.length) {
+    // この製品に関係しうる速報（同じ種類か、CPE 対応表がある製品の範囲が他の CVE に付いている）なら unknown
+    const relevant = usable.length > 0 || cves.some((c) => (cveMap[c]?.ranges || []).some((r) => cpes.has(`${r.vendor}:${r.product}`.toLowerCase())));
+    if (relevant) return { verdict: 'unknown', why: 'pending', fixed: [], also_affected: [] };
+    return null; // 判断材料も関係の手がかりも無い＝呼び出し側が種類で見る
+  } else if (usable.length === 0) {
+    return null; // 取得済みで、この製品の範囲が無い＝当たらない
+  }
   const verdict = results.some((x) => x.hit === true) ? 'required' : results.some((x) => x.hit === null) ? 'unknown' : 'ok';
   // 修正版の案内は「当たった範囲」の end_excl だけ。end_incl は「その版も対象」として別に出す
   const matched = results.filter((x) => x.hit === true).map((x) => x.r);
@@ -127,17 +139,28 @@ export function judge({ installed, catalog, affected, feed, browsers = null }) {
       }
     }
 
+    // 製品そのものの材料不足は、速報の有無に関係なく unknown にする（監査R4-H5）：CPE の対応表が無い／版数が読めない
+    if (!bkey && cpes.size === 0) {
+      for (const inst of instances) findings.push(f(inst, { id: `${p.key}-no_cpe`, title: `${p.label} は影響範囲（NVD の CPE）の対応表が無く、判定できません`, exploited: false, severity: 'high' }, { verdict: 'unknown', why: 'no_cpe', fixed: [], also_affected: [] }));
+    }
+    for (const inst of instances) {
+      if (!inst.version && !findings.some((x) => x.instance === inst.key)) findings.push(f(inst, { id: `${p.key}-no_version`, title: `${p.label} の版数が読めず、判定できません`, exploited: false, severity: 'high' }, { verdict: 'unknown', why: 'version', fixed: [], also_affected: [] }));
+    }
+
     for (const item of items) {
       if (findings.some((x) => x.item_id === item.id)) continue; // browsers.json で既に見た件
       const cves = item.exploited_cves?.length ? item.exploited_cves : item.cves.slice(0, 3);
       const ranges = cves.flatMap((c) => (cveMap[c]?.ranges || []).map((r) => ({ ...r, cve: c }))).filter((r) => cpes.has(`${r.vendor}:${r.product}`.toLowerCase()));
       const relevantByClass = (item.products || []).includes(p.class) && p.class !== 'other';
       for (const inst of instances) {
-        let res = judgeInstance(inst, item, ranges, pending);
-        // 範囲が無く、この製品の種類に向けた速報で CPE の対応が無い（slack／obs）か未取得なら、黙らず unknown
-        if (!res && relevantByClass && (cpes.size === 0 || cves.some((c) => pending.has(c) || !cveMap[c]))) res = { verdict: 'unknown', why: cpes.size === 0 ? 'no_cpe' : 'pending', fixed: [], also_affected: [] };
+        if (cpes.size === 0) continue; // 対応表が無い製品は上で unknown にしてある
+        let res = judgeInstance(inst, item, ranges, pending, cveMap, cpes);
+        // 範囲も手がかりも無いが、この製品の種類に向けた速報で CVE が未解決なら、黙らず unknown
+        if (!res && relevantByClass && cves.some((c) => pending.has(c) || !cveMap[c] || cveMap[c].status === 'awaiting')) res = { verdict: 'unknown', why: 'pending', fixed: [], also_affected: [] };
         if (!res) continue;
-        findings.push(f(inst, item, res, 'nvd'));
+        // 「今やること」は製品ごとの手順があればそれを使う（Chrome と Edge が1件にまとまった速報・監査R4-M8）
+        const action = item.actions_by_product?.[p.class] || item.action_ja || '';
+        findings.push(f(inst, { ...item, action_ja: action }, res, 'nvd'));
       }
     }
 

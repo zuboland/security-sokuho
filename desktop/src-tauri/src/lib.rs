@@ -46,20 +46,38 @@ fn run_cmd_timeout(prog: &str, args: &[&str], timeout: Duration) -> CmdOut {
     let mut err = child.stderr.take();
     let th_out = std::thread::spawn(move || { let mut s = Vec::new(); if let Some(o) = out.as_mut() { let _ = std::io::Read::read_to_end(o, &mut s); } s });
     let th_err = std::thread::spawn(move || { let mut s = Vec::new(); if let Some(o) = err.as_mut() { let _ = std::io::Read::read_to_end(o, &mut s); } s });
+    #[allow(unused_variables)]
     let start = Instant::now();
     let mut timed_out = false;
+    let pid = child.id();
     let status = loop {
         match child.try_wait() {
             Ok(Some(st)) => break Some(st),
             Ok(None) => {
-                if start.elapsed() > timeout { let _ = child.kill(); timed_out = true; break child.wait().ok(); }
+                if start.elapsed() > timeout {
+                    // 子孫（インストーラー等）ごと止める。kill() は直接の子だけなので taskkill /T を使う（監査R4-M3）
+                    #[cfg(windows)]
+                    {
+                        let mut k = Command::new("taskkill");
+                        k.args(["/PID", &pid.to_string(), "/T", "/F"]).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+                        k.creation_flags(CREATE_NO_WINDOW);
+                        let _ = k.status();
+                    }
+                    let _ = child.kill();
+                    timed_out = true;
+                    break child.wait().ok();
+                }
                 std::thread::sleep(Duration::from_millis(250));
             }
             Err(_) => break None,
         }
     };
-    let stdout = String::from_utf8_lossy(&th_out.join().unwrap_or_default()).to_string();
-    let stderr = String::from_utf8_lossy(&th_err.join().unwrap_or_default()).to_string();
+    // 読み取りスレッドは待ち過ぎない（子孫がパイプを握ったままだと EOF が来ない）。5秒で諦めて取れた分だけ返す
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || { let o = th_out.join().unwrap_or_default(); let e = th_err.join().unwrap_or_default(); let _ = tx.send((o, e)); });
+    let (o, e) = rx.recv_timeout(Duration::from_secs(5)).unwrap_or_else(|_| (b"(output not available: pipe held by a child process)".to_vec(), Vec::new()));
+    let stdout = String::from_utf8_lossy(&o).to_string();
+    let stderr = String::from_utf8_lossy(&e).to_string();
     let code = status.and_then(|s| s.code()).unwrap_or(-1);
     CmdOut { ok: !timed_out && code == 0, code, timed_out, stdout, stderr: if timed_out { format!("timed out after {}s\n{stderr}", timeout.as_secs()) } else { stderr } }
 }

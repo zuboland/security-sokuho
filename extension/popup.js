@@ -62,6 +62,13 @@ function cveLine(i) {
   return '　' + esc(head.join(', ')) + (ex.length ? '（悪用確認）' : '') + (more > 0 ? ` 他${more}件` : '');
 }
 
+/** 今やること。1件に複数の製品（Chrome と Edge）が入っていれば製品ごとに出す（監査R4-M8） */
+function actionsHtml(i) {
+  const byP = i.actions_by_product && typeof i.actions_by_product === 'object' ? Object.values(i.actions_by_product).filter((s) => typeof s === 'string') : [];
+  const list = byP.length > 1 ? byP : [i.action_ja || ''];
+  return list.map((a) => `<div class="a">${esc(a)}</div>`).join('');
+}
+
 /** 関連する投稿（Hacker News は見出し・X はリンクだけ＝本文は配信しない） */
 function postsHtml(i) {
   const posts = i.related_posts || [];
@@ -83,7 +90,7 @@ function renderAlerts(state) {
       <div class="t"><span class="tag">${esc(i.product_label || '')}</span>${esc(i.title_ja || i.title || '')}</div>
       <div class="tiny mono">${esc(i.published || '')}${cveLine(i)}</div>
       ${i.summary_ja ? `<div class="muted" style="font-size:13px;margin-top:4px">${esc(i.summary_ja)}</div>` : ''}
-      <div class="a">${esc(i.action_ja || '')}</div>
+      ${actionsHtml(i)}
       ${(i.advice_ja || []).length ? `<ul class="advice">${i.advice_ja.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
       ${postsHtml(i)}
       <div class="tiny">${(i.sources || []).slice(0, 2).map((s) => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`).join('・')}</div>
@@ -98,9 +105,9 @@ async function load() {
 
 $('recheck').addEventListener('click', async () => {
   $('recheck').disabled = true;
-  await chrome.runtime.sendMessage({ type: 'check-now' });
-  await load();
-  $('recheck').disabled = false;
+  try { await chrome.runtime.sendMessage({ type: 'check-now' }); await load(); }
+  catch (e) { $('status').insertAdjacentHTML('beforeend', `<p class="tiny">表示に失敗：${esc(e.message || e)}</p>`); }
+  finally { $('recheck').disabled = false; }
 });
 
 load();

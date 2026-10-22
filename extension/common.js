@@ -74,7 +74,8 @@ function behindLatest(version, b) {
 /** 配信の鮮度。30分ごとの配信が 24 時間止まっていたら「古い」（古い安全判定を現在の確認として出さない・監査R2/R3） */
 export const STALE_HOURS = 24;
 export function isStale(status, now = Date.now()) {
-  const t = status?.generated_at ? Date.parse(status.generated_at) : NaN;
+  // 根拠のデータの時刻（data_as_of）で見る。snapshot で作り直した回は generated_at が新しくても data_as_of は古い（監査R4-H2）
+  const t = status?.data_as_of ? Date.parse(status.data_as_of) : status?.generated_at ? Date.parse(status.generated_at) : NaN;
   if (Number.isNaN(t)) return true;
   return now - t > STALE_HOURS * 3600 * 1000;
 }
@@ -94,7 +95,10 @@ export function validateBrowsers(b) {
 export function validateAlerts(a) {
   if (!a || typeof a !== 'object' || a.schema !== 1) return 'schema';
   if (!Array.isArray(a.items)) return 'items';
-  if (!a.items.every((i) => i && typeof i === 'object' && typeof i.id === 'string')) return 'item';
+  if (a.sources_failed != null && !Array.isArray(a.sources_failed)) return 'sources_failed';
+  // 描画で配列として扱う欄は配列であることを見る（監査R4-M6）
+  const arr = (x) => x == null || Array.isArray(x);
+  if (!a.items.every((i) => i && typeof i === 'object' && typeof i.id === 'string' && arr(i.cves) && arr(i.exploited_cves) && arr(i.advice_ja) && arr(i.sources) && arr(i.related_posts))) return 'item';
   return null;
 }
 

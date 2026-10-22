@@ -51,6 +51,15 @@ const a3 = assemble({ chrome: null }, { now });
 check('Chrome の情報源が取れない→status unknown', a3.browsers.chrome.status === 'unknown');
 const a4 = assemble({ chrome: [post({ published: '2026-01-01T00:00:00Z', exploited_cves: ['CVE-2026-1'] })] }, { now });
 check('期間外の投稿は速報にしない', a4.alerts.length === 0);
+// KEV が今日載せた古い CVE：古い投稿に修正版があれば min_safe に使う。どの投稿にも無ければ unknown（速報なしと言わない）
+const kevOld = { items: [{ cve: 'CVE-2025-9', vendor: 'Google', product: 'Chromium V8', name: 'x', description: 'x', date_added: '2026-10-21', urls: [], cwes: [] }] };
+const a5 = assemble({ chrome: [post({ published: '2025-10-20T00:00:00Z', fixed_version: '140.0.0.1', cves: ['CVE-2025-9'], exploited_cves: [] })], kev: kevOld }, { now });
+check('KEV が期間内に載せた古い CVE は、古い投稿の修正版を min_safe に使う', a5.browsers.chrome.min_safe === '140.0.0.1' && a5.browsers.chrome.status === 'ok');
+const a6 = assemble({ chrome: [post({})], kev: kevOld }, { now });
+check('KEV の CVE がどの投稿にも無ければ chrome は unknown', a6.browsers.chrome.status === 'unknown' && a6.browsers.chrome.uncovered_cves.includes('CVE-2025-9'));
+import { reconcileBrowsers } from './build.js';
+const rb = reconcileBrowsers({ chrome: { status: 'unknown', min_safe: null, exploited_cves: [], uncovered_cves: ['CVE-2025-9'] }, edge: { status: 'ok', uncovered_cves: [] } }, { 'CVE-2025-9': { ranges: [{ vendor: 'google', product: 'chrome', end_excl: '141.0.0.1' }] } });
+check('NVD の範囲で埋まれば ok に戻り min_safe が付く', rb.chrome.status === 'ok' && rb.chrome.min_safe === '141.0.0.1');
 
 // 6. 製品の種類分け
 check('KEV の Google/Chromium V8 は chrome', classify('Google', 'Chromium V8') === 'browser-chrome');

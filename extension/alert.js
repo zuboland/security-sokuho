@@ -31,7 +31,8 @@ function render(state) {
     $('kanji').innerHTML = '安全確認<small>OK</small>';
     $('eyebrow').textContent = '緊急セキュリティ速報';
     $('title').textContent = r.reason === 'quiet' ? 'いま緊急の速報はありません' : `${n} は対応済みです`;
-    $('lead').innerHTML = r.reason === 'quiet' ? `直近90日に、${esc(n)} で悪用が確認された脆弱性は出ていません。` : `修正版（${esc(r.info.min_safe)}）以上の版数です。追加の操作は要りません。`;
+    const days = state.window_days ? `直近${state.window_days}日に` : '直近の期間に';
+    $('lead').innerHTML = r.reason === 'quiet' ? `${esc(days)}、${esc(n)} で悪用が確認された脆弱性は出ていません。` : `修正版（${esc(r.info.min_safe)}）以上の版数です。追加の操作は要りません。`;
     $('vers').hidden = r.reason === 'quiet';
     $('v-now').textContent = r.version || '—';
     $('v-safe').textContent = r.info?.min_safe || '—';

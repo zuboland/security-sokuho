@@ -19,7 +19,7 @@ import { fetchJpcert, fetchIpa } from './sources/rss_rdf.js';
 import { fetchJvn } from './sources/jvn.js';
 import { fetchEdge } from './sources/edge.js';
 import { classify, classLabel, actionTemplate, whoTemplate, protectAdvice, kindOf, CONSUMER_CLASSES } from './triage.js';
-import { compareVersions } from './version.js';
+import { compareVersions, maxVersion } from './version.js';
 import { applySummaries } from './summarize.js';
 import { attachPosts } from './sources/social.js';
 import { collectAffected } from './sources/nvd.js';
@@ -223,7 +223,16 @@ export function assemble({ kev, chrome, chromeStable, edge, jpcert, ipa, jvn, ep
 
   const alerts = items.filter((i) => i.severity === 'critical');
   const kevCves = new Set((kev?.items || []).map((k) => k.cve));
-  const browsers = buildBrowsers({ chrome, chromeStable, edge, since, kevCves });
+  // 期間内に KEV へ載ったブラウザの CVE（Chromium 系は Chrome と Edge の両方に効く）
+  const kevBrowserCves = { chrome: new Set(), edge: new Set() };
+  for (const k of kev?.items || []) {
+    if (toDate(k.date_added) < since) continue;
+    const cls = classify(k.vendor, k.product, k.description);
+    // Edge の更新情報は Chromium 由来の CVE を列挙しないことが多いので、「未カバー」の検査は Edge 固有の CVE だけに掛ける
+    if (cls === 'browser-chrome') kevBrowserCves.chrome.add(k.cve);
+    if (cls === 'browser-edge') kevBrowserCves.edge.add(k.cve);
+  }
+  const browsers = buildBrowsers({ chrome, chromeStable, edge, since, kevCves, kevBrowserCves });
   // alert_id は「まとめた後の item の id」にそろえる（Edge の投稿が Chrome の item に吸われたとき）
   for (const key of ['chrome', 'edge']) {
     const b = browsers[key];
@@ -241,17 +250,22 @@ export function assemble({ kev, chrome, chromeStable, edge, jpcert, ipa, jvn, ep
   return { items, alerts: alerts2, browsers };
 }
 
-function buildBrowsers({ chrome, chromeStable, edge, since, kevCves = new Set() }) {
+function buildBrowsers({ chrome, chromeStable, edge, since, kevCves = new Set(), kevBrowserCves = { chrome: new Set(), edge: new Set() } }) {
   const out = {};
   // 悪用確認＝メーカーの「in the wild」か、CISA KEV に載った CVE（監査R2：KEV が後から確認した件が通知に反映されなかった）
   const exploitedOf = (p) => [...new Set([...(p.exploited_cves || []), ...(p.cves || []).filter((c) => kevCves.has(c))])];
-  // Chrome：期間内で悪用確認つきの投稿のうち最新の修正版を「この版数以上なら安全」とする
+  // 「期間内」の意味＝メーカーの悪用確認は投稿日、KEV の悪用確認は KEV の追加日。古い投稿でも KEV が今日載せた CVE を直していれば候補にする（監査R4-H6）
+  const candidate = (p, date, kevSet) => (p.exploited_cves.length && toDate(date) >= since) || (p.cves || []).some((c) => kevSet.has(c));
+  // Chrome：悪用確認つきの投稿のうち最新の修正版を「この版数以上なら安全」とする
   if (chrome) {
-    const itw = chrome.map((p) => ({ ...p, exploited_cves: exploitedOf(p) })).filter((p) => p.exploited_cves.length && p.fixed_version && toDate(p.published) >= since)
+    const itw = chrome.map((p) => ({ ...p, exploited_cves: exploitedOf(p) })).filter((p) => p.fixed_version && candidate(p, p.published, kevBrowserCves.chrome))
       .sort((a, b) => compareVersions(b.fixed_version, a.fixed_version));
     const top = itw[0] || null;
+    // KEV が期間内に載せた Chrome の CVE で、どの投稿にも修正版が無いものがあれば「分からない」（速報なしと言わない）
+    const uncovered = [...kevBrowserCves.chrome].filter((c) => !chrome.some((p) => (p.cves || []).includes(c)));
     out.chrome = {
-      status: 'ok',
+      status: uncovered.length ? 'unknown' : 'ok',
+      uncovered_cves: uncovered,
       min_safe: top?.fixed_version || null,
       exploited_cves: top?.exploited_cves || [],
       alert_id: top ? `chrome-${top.fixed_version}` : null,
@@ -263,11 +277,13 @@ function buildBrowsers({ chrome, chromeStable, edge, since, kevCves = new Set() 
     out.chrome = { status: 'unknown', min_safe: null, exploited_cves: [], alert_id: null, alert_date: null, latest_stable: chromeStable || null, as_of: null };
   }
   if (edge) {
-    const itw = edge.map((e) => ({ ...e, exploited_cves: exploitedOf(e) })).filter((e) => e.exploited_cves.length && parseEnglishDate(e.date) >= since)
+    const itw = edge.map((e) => ({ ...e, exploited_cves: exploitedOf(e) })).filter((e) => e.fixed_version && candidate(e, parseEnglishDate(e.date), kevBrowserCves.edge))
       .sort((a, b) => compareVersions(b.fixed_version, a.fixed_version));
     const top = itw[0] || null;
+    const uncovered = [...kevBrowserCves.edge].filter((c) => !edge.some((e) => (e.cves || []).includes(c)));
     out.edge = {
-      status: 'ok',
+      status: uncovered.length ? 'unknown' : 'ok',
+      uncovered_cves: uncovered,
       min_safe: top?.fixed_version || null,
       exploited_cves: top?.exploited_cves || [],
       alert_id: top ? `edge-${top.fixed_version}` : null,
@@ -283,6 +299,29 @@ function buildBrowsers({ chrome, chromeStable, edge, since, kevCves = new Set() 
 }
 
 /** 「September 4, 2026」のような日付だけの文字列は UTC の0時として読む（ローカル時刻で読むと isoDay で前日にずれる） */
+/**
+ * メーカー投稿に無い KEV の CVE（uncovered）を NVD の範囲（google:chrome／microsoft:edge_chromium の end_excl）で埋める。
+ * 埋まれば min_safe に反映して status を ok に戻す。埋まらなければ unknown のまま（速報なしと言わない）
+ */
+export function reconcileBrowsers(browsers, affected) {
+  const cpeOf = { chrome: ['google:chrome'], edge: ['microsoft:edge_chromium', 'microsoft:edge'] };
+  for (const key of ['chrome', 'edge']) {
+    const b = browsers[key];
+    if (!b || !b.uncovered_cves?.length) continue;
+    const still = [];
+    for (const cve of b.uncovered_cves) {
+      const ranges = (affected?.[cve]?.ranges || []).filter((r) => cpeOf[key].includes(`${r.vendor}:${r.product}`) && r.end_excl);
+      const fix = maxVersion(ranges.map((r) => r.end_excl));
+      if (!fix) { still.push(cve); continue; }
+      if (!b.min_safe || compareVersions(fix, b.min_safe) > 0) { b.min_safe = fix; b.alert_id = b.alert_id || `kev-${cve}`; }
+      b.exploited_cves = [...new Set([...(b.exploited_cves || []), cve])];
+    }
+    b.uncovered_cves = still;
+    b.status = still.length ? 'unknown' : 'ok';
+  }
+  return browsers;
+}
+
 export function parseEnglishDate(s) {
   if (!s) return null;
   const d = new Date(/\d{1,2}:\d{2}|Z$|[+-]\d{2}:\d{2}$/.test(s) ? s : `${s} UTC`);
@@ -312,18 +351,21 @@ export async function collect() {
   ]);
   const got = Object.fromEntries(results.map((r) => [r.name, r.value]));
   const failed = results.filter((r) => !r.ok).map((r) => ({ source: r.name, error: r.error, using_snapshot_from: r.snapshot_from || null }));
+  // 情報源ごとの「最後に正常に取れた時刻」。snapshot を使った回は古い時刻のまま＝クライアントはこれで鮮度を見る（監査R4-H2）
+  const nowIso = new Date().toISOString();
+  const sources = Object.fromEntries(results.map((r) => [r.name, { ok: r.ok, last_ok_at: r.ok ? nowIso : (r.snapshot_from || null) }]));
   const cves = new Set();
   for (const p of got.chrome_releases || []) p.exploited_cves.forEach((c) => cves.add(c));
   for (const k of got.kev?.items || []) cves.add(k.cve);
   const epss = cves.size ? await fetchEpss([...cves].slice(0, 300)) : {};
-  return { got, failed, epss };
+  return { got, failed, epss, sources };
 }
 
 function stable(obj) {
   return JSON.stringify(obj, null, 1) + '\n';
 }
 
-export async function writeOutputs({ items, alerts, browsers, failed, generatedAt, affected = {} }) {
+export async function writeOutputs({ items, alerts, browsers, failed, generatedAt, affected = {}, sources = {} }) {
   await mkdir(PUBLIC_DIR, { recursive: true });
   // 静的ページ（プライバシーポリシー等）は feed/static/ からそのまま配信に乗せる
   const staticDir = path.join(here, '..', 'static');
@@ -340,11 +382,14 @@ export async function writeOutputs({ items, alerts, browsers, failed, generatedA
   const aff = Object.fromEntries(Object.entries(affected).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, { published: v.published, last_modified: v.last_modified, cvss: v.cvss, status: v.status || (v.ranges?.length ? 'analyzed' : 'awaiting'), ranges: v.ranges }]));
   const pending = [...(affected.__pending || [])].sort();
   await writeFile(path.join(PUBLIC_DIR, 'affected.json'), stable({ schema, pending, cves: aff }));
-  await writeFile(path.join(PUBLIC_DIR, 'status.json'), stable({ schema, generated_at: generatedAt, sources_failed: failed, counts: { items: items.length, alerts: alerts.length } }));
+  // data_as_of＝速報の根拠（Chrome Releases・KEV）のうち古い方の最終正常取得時刻。snapshot で作った回はここが古くなる
+  const essential = ['chrome_releases', 'kev'].map((k) => sources[k]?.last_ok_at).filter(Boolean).map((t) => Date.parse(t));
+  const dataAsOf = essential.length === 2 ? new Date(Math.min(...essential)).toISOString() : null;
+  await writeFile(path.join(PUBLIC_DIR, 'status.json'), stable({ schema, generated_at: generatedAt, data_as_of: dataAsOf, sources, sources_failed: failed, counts: { items: items.length, alerts: alerts.length } }));
 }
 
 export async function main() {
-  const { got, failed, epss } = await collect();
+  const { got, failed, epss, sources } = await collect();
   // 🚨 速報の根拠（Chrome Releases と KEV）が両方とも「今回も直前の中身も」無いときは、古い公開物を上書きしない
   if (!got.chrome_releases && !got.kev) {
     console.error('chrome_releases と kev の両方が取れなかったので public/ を更新しません:', failed);
@@ -363,8 +408,11 @@ export async function main() {
   const rank = { critical: 0, high: 1 };
   const cvesForRanges = [...items].filter((i) => i.severity !== 'info').sort((a, b) => rank[a.severity] - rank[b.severity])
     .flatMap((i) => i.exploited_cves.length ? i.exploited_cves : i.cves.slice(0, 3));
+  // 速報の根拠に入っていないブラウザの CVE（KEV だけが知っている）も範囲を取る
+  for (const key of ['chrome', 'edge']) for (const c of browsers[key]?.uncovered_cves || []) cvesForRanges.unshift(c);
   const affected = await collectAffected(cvesForRanges);
-  await writeOutputs({ items, alerts, browsers, failed, generatedAt: new Date().toISOString(), affected });
+  reconcileBrowsers(browsers, affected);
+  await writeOutputs({ items, alerts, browsers, failed, generatedAt: new Date().toISOString(), affected, sources });
   console.log(`items ${items.length} / alerts ${alerts.length} / chrome min_safe ${browsers.chrome.min_safe} / edge min_safe ${browsers.edge.min_safe} / failed ${failed.map((f) => f.source).join(',') || 'none'}`);
 }
 

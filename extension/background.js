@@ -63,8 +63,14 @@ async function runCheck() {
   await chrome.storage.local.set({ state });
   await paintBadge(result);
   if (result.verdict === 'required' && settings.notify) await notifyOnce(result);
-  if (result.verdict === 'ok') await clearNotifications(result.browser); // 解消・撤回されたら出した通知を消す（監査R3）
+  // 正常な配信を見たときは、今有効な警告（1つ）以外の通知を消す＝解消・撤回のどちらも（監査R3-M4／R4-M7）
+  if (result.verdict === 'ok' || result.verdict === 'required') await clearNotificationsExcept(result.browser, result.verdict === 'required' ? notifyId(result) : null);
   return state;
+}
+
+/** 通知の同一性＝ブラウザ＋速報 ID＋修正版（統合で同じ item id になった別の Edge 修正版を既読にしない・監査R4-M1） */
+function notifyId(result) {
+  return `secalert:${result.browser}:${result.info?.alert_id || 'unknown'}:${result.info?.min_safe || ''}`;
 }
 
 async function paintBadge(result) {
@@ -80,8 +86,8 @@ async function paintBadge(result) {
 }
 
 async function notifyOnce(result) {
-  const alertId = result.info?.alert_id || 'unknown';
-  const key = `notified:${result.browser}:${alertId}`;
+  const id = notifyId(result);
+  const key = `notified:${id}`;
   const seen = await chrome.storage.local.get(key);
   if (seen[key]) return;
   // 先に既読を立ててから通知する（同時実行で2回出さない）
@@ -96,7 +102,6 @@ async function notifyOnce(result) {
     requireInteraction: true,
     buttons: [{ title: '更新画面を開く' }],
   };
-  const id = `secalert:${result.browser}:${alertId}`;
   try {
     // バナー画像つき（対応していない環境では basic に落とす）
     await chrome.notifications.create(id, { ...base, type: 'image', imageUrl: 'icons/banner_alert.png' });
@@ -109,9 +114,9 @@ async function notifyOnce(result) {
   await openAlertPage();
 }
 
-async function clearNotifications(browser) {
+async function clearNotificationsExcept(browser, keep) {
   const { notified_ids = [] } = await chrome.storage.local.get('notified_ids');
-  const mine = notified_ids.filter((id) => id.startsWith(`secalert:${browser}:`));
+  const mine = notified_ids.filter((id) => id.startsWith(`secalert:${browser}:`) && id !== keep);
   for (const id of mine) { try { await chrome.notifications.clear(id); } catch { /* 無ければよい */ } }
   if (mine.length) await chrome.storage.local.set({ notified_ids: notified_ids.filter((id) => !mine.includes(id)) });
 }
