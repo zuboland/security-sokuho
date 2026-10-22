@@ -24,6 +24,11 @@ jobs:
   build-windows:
     needs: test
     runs-on: windows-latest
+    # step の if では secrets を参照できない（2026-10-22 実測＝workflow file issue で即失敗）ので job の env に写して判定する
+    env:
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -35,7 +40,7 @@ jobs:
         run: npm ci --no-audit --no-fund
         working-directory: desktop
       - name: 署名ツール（Trusted Signing dlib）を用意
-        if: ${{ secrets.AZURE_CLIENT_ID != '' }}
+        if: ${{ env.AZURE_CLIENT_ID != '' }}
         shell: pwsh
         run: |
           nuget install Microsoft.Trusted.Signing.Client -Version 1.0.53 -OutputDirectory "$env:RUNNER_TEMP\tsc" -x
@@ -43,10 +48,6 @@ jobs:
       - name: ビルド（署名込み）
         run: npm run build
         working-directory: desktop
-        env:
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       - name: 署名の実測（signtool verify）→ Releases の説明文に反映
         id: sig
         shell: pwsh
@@ -55,7 +56,7 @@ jobs:
           "installer: $($exe.FullName)"
           $sig = Get-AuthenticodeSignature $exe.FullName
           "status: $($sig.Status) / signer: $($sig.SignerCertificate.Subject)"
-          if ("${{ secrets.AZURE_CLIENT_ID }}" -ne "" -and $sig.Status -ne "Valid") { throw "署名が有効ではありません" }
+          if ($env:AZURE_CLIENT_ID -ne "" -and $sig.Status -ne "Valid") { throw "署名が有効ではありません" }
           $line = if ($sig.Status -eq "Valid") { "インストーラーは ZUBOLAND株式会社 の証明書で署名しています（Azure Trusted Signing・signtool で実測）。" } else { "🚨 このプレリリースのインストーラーは**未署名**です（署名の鍵が CI に無いため）。SmartScreen の警告が出ます。正式版は署名して出します。" }
           "signed_line=$line" >> $env:GITHUB_OUTPUT
       - name: 添付の名前を ASCII にする（GitHub は Releases の添付名から日本語を落とし「_0.1.0_x64-setup.exe」になる・2026-10-22 実測）
