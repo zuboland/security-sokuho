@@ -90,33 +90,38 @@ function parseJson(text) {
   try { return JSON.parse(m[0]); } catch { return null; }
 }
 
-export async function loadCached(id) {
-  try { return JSON.parse(await readFile(path.join(SUMMARY_DIR, `${id}.json`), 'utf8')); } catch { return null; }
+export async function loadCached(id, dir = SUMMARY_DIR) {
+  try { return JSON.parse(await readFile(path.join(dir, `${id}.json`), 'utf8')); } catch { return null; }
 }
 
-/** items に要約を載せる。キャッシュがあれば使い、無ければ（provider が none でなければ）AIを呼ぶ */
-export async function applySummaries(items, { provider = PROVIDER, maxPerRun = MAX_PER_RUN } = {}) {
-  await mkdir(SUMMARY_DIR, { recursive: true });
+/**
+ * items に要約を載せる。キャッシュがあれば使い、無ければ（provider が none でなければ）AIを呼ぶ
+ * call: 外から AI の呼び方を渡す口（結城さんPCの係 pc_ai_worker が claude -p で呼ぶ＝API代0）。
+ *       (system, prompt) => Promise<{ text, model }>。渡したときは provider に関係なく使う。検査と保存はここで同じに通る
+ * dir: 要約の置き場所（既定 SUMMARY_DIR）。係は自分の clone の中を指す
+ */
+export async function applySummaries(items, { provider = PROVIDER, maxPerRun = MAX_PER_RUN, call = null, dir = SUMMARY_DIR } = {}) {
+  await mkdir(dir, { recursive: true });
   let calls = 0;
   // 速報（critical）→ high → info の順に呼ぶ（1回の上限に当たっても、人に見せる件から先に日本語になる。
   // 2026-10-22 の初回は新しい順に20件回して、速報9件の要約が0件だった）
   const rank = { critical: 0, high: 1, info: 2 };
   const order = [...items].sort((a, b) => (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9));
   for (const item of order) {
-    const cached = await loadCached(item.id);
+    const cached = await loadCached(item.id, dir);
     if (cached && validateSummary(cached, item) === null) { Object.assign(item, pick(cached)); item.summary_by = cached.model || 'cache'; continue; }
-    if (provider === 'none' || calls >= maxPerRun) continue;
+    if ((provider === 'none' && !call) || calls >= maxPerRun) continue;
     // 日本語の要約が既にある件（JPCERT／IPA 由来）は AI を使わない
     if (item.summary_ja && item.title_ja) continue;
     calls++;
     try {
-      const r = provider === 'anthropic' ? await callAnthropic(buildPrompt(item)) : provider === 'openai' ? await callOpenAI(buildPrompt(item)) : null;
+      const r = call ? await call(SYSTEM, buildPrompt(item)) : provider === 'anthropic' ? await callAnthropic(buildPrompt(item)) : provider === 'openai' ? await callOpenAI(buildPrompt(item)) : null;
       if (!r) continue;
       const out = parseJson(r.text);
       const why = validateSummary(out, item);
       if (why) { console.warn(`[summarize] ${item.id} を捨てた: ${why}`); continue; }
       const record = { summary_ja: out.summary_ja, who_ja: out.who_ja, action_ja: out.action_ja, model: r.model, created_at: new Date().toISOString() }; // 保存は3つ・使うのは要約だけ
-      await writeFile(path.join(SUMMARY_DIR, `${item.id}.json`), JSON.stringify(record, null, 1) + '\n');
+      await writeFile(path.join(dir, `${item.id}.json`), JSON.stringify(record, null, 1) + '\n');
       Object.assign(item, pick(out));
       item.summary_by = r.model;
     } catch (e) {
