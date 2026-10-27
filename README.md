@@ -6,6 +6,7 @@
 > この速報が電話やダウンロードを求めることはありません。
 > 「ウイルスに感染しました」と電話番号を出す画面は、この拡張ではなく詐欺です。
 
+- Chrome ウェブストア：https://chromewebstore.google.com/detail/kcgjkmndebbahngomgielflgiilhnbak （Edge でも入ります）
 - 公開フィード：https://zuboland.github.io/security-sokuho/ （`browsers.json` / `alerts.json` / `feed.json` / `status.json`）
 - リポジトリ：https://github.com/zuboland/security-sokuho （MIT）
 
@@ -47,6 +48,10 @@
 | [JVN iPedia](https://jvndb.jvn.jp/) | 日本語の脆弱性DB（止まっていることがあるので、無くても動く作り） |
 
 ## 使う
+
+### 拡張（ストア版）
+
+[Chrome ウェブストア](https://chromewebstore.google.com/detail/kcgjkmndebbahngomgielflgiilhnbak)で「Chrome に追加」を押すだけです。Edge でも同じページから入れられます（「他のストアからの拡張機能を許可」をオン）。
 
 ### 拡張（開発版）
 
