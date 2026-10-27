@@ -22,6 +22,11 @@
   footer .ghost { background: none; border: 1px solid var(--line); color: var(--fg2); border-radius: 8px; padding: 6px 10px; cursor: pointer; font: 12px var(--font); }
   footer .ghost:hover { color: var(--fg); }
   footer .promise { border: 0; padding: 0; }
+  /* 未確認は確認済みと見た目で分ける（点線・黄色の札） */
+  .row.rumor { border-top-style: dashed; }
+  .tag.unconfirmed { background: rgba(245,158,11,0.18); color: #B45309; }
+  .tag.news { background: rgba(120,120,120,0.14); color: var(--fg2); }
+  .caution { font-size: 12px; color: #B45309; margin: 6px 0 2px; }
 </style>
 </head>
 <body class="is-unknown">
@@ -35,6 +40,12 @@
 <section class="list">
   <h3>直近の速報 ── 悪用が確認されたもの</h3>
   <div id="alerts"><p class="tiny">読み込み中…</p></div>
+</section>
+<section class="list" id="breaches">
+  <h3>サービスの情報漏えい ── 確認済み・報道</h3>
+  <div id="breach-confirmed"><p class="tiny">読み込み中…</p></div>
+  <h3 class="rumor-h">⚠ X で話題（未確認）</h3>
+  <div id="breach-rumor"></div>
 </section>
 <footer>
   <div class="promise"><span>🛡</span><div><b>この速報が電話やダウンロードを求めることはありません</b></div></div>

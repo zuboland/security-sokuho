@@ -101,6 +101,12 @@ async function fetchX(q, published) {
   }
 }
 
+/** 公開してよい形。X は id・author・url・source・query だけ。HN（公開API・見出し）はそのまま */
+export function publicPost(p) {
+  if (p?.source !== 'x') return p;
+  return { source: 'x', id: p.id, author: p.author, url: p.url, query: p.query };
+}
+
 async function loadCached(id) {
   try { return JSON.parse(await readFile(path.join(POSTS_DIR, `${id}.json`), 'utf8')); } catch { return null; }
 }
@@ -117,8 +123,8 @@ export async function attachPosts(items, { providers = PROVIDERS, maxCalls = Num
     const retry = cached ? (cached.failed || []).filter((p) => providers.includes(p)) : [];
     const missing = cached ? providers.filter((p) => !(cached.providers || []).includes(p)) : [];
     const todo = cached ? [...new Set([...retry, ...missing])] : providers;
-    if (cached && todo.length === 0) { item.related_posts = cached.posts; continue; }
-    if (calls >= maxCalls) { if (cached) item.related_posts = cached.posts; continue; }
+    if (cached && todo.length === 0) { item.related_posts = (cached.posts || []).map(publicPost); continue; }
+    if (calls >= maxCalls) { if (cached) item.related_posts = (cached.posts || []).map(publicPost); continue; }
     const q = queryFor(item);
     if (!q) continue;
     calls++;
@@ -134,7 +140,8 @@ export async function attachPosts(items, { providers = PROVIDERS, maxCalls = Num
       }
     }
     posts.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-    item.related_posts = posts.slice(0, MAX_PER_ITEM);
+    // X の投稿は ID・@user・URL だけを残す（いいね数・言語・日時は並べ替えにだけ使い、公開物にもキャッシュにも残さない・監査 R2）
+    item.related_posts = posts.slice(0, MAX_PER_ITEM).map(publicPost);
     // 何も見つからなくても保存する（毎回同じ検索を繰り返さない。X は有料）。失敗した情報源は記録して次回だけ取り直す
     await writeFile(path.join(POSTS_DIR, `${item.id}.json`), JSON.stringify({ query: q, fetched_at: new Date().toISOString(), providers, failed, posts: item.related_posts }, null, 1) + '\n');
   }

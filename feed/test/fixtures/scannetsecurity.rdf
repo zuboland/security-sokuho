@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- テスト用の架空の記事（実在の記事・企業ではない）。ScanNetSecurity の RDF 1.0 と同じ構造だけを写した -->
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://purl.org/rss/1.0/">
+ <channel rdf:about="https://example.invalid/scan/">
+  <title>テスト用フィード（RDF）</title>
+  <link>https://example.invalid/scan/</link>
+  <description>架空の記事</description>
+ </channel>
+ <item rdf:about="https://example.invalid/scan/1">
+  <title>オンライン会員サービス「テストID」に不正アクセス、全世界合計 11,774,247件のメールアドレス等が漏えい</title>
+  <link>https://example.invalid/scan/1</link>
+  <dc:date>2026-10-26T23:05:35Z</dc:date>
+ </item>
+ <item rdf:about="https://example.invalid/scan/2">
+  <title>「架空焼肉」公式アプリ会員管理システムに不正アクセス、1,078万8,963件の個人情報が漏えい</title>
+  <link>https://example.invalid/scan/2</link>
+  <dc:date>2026-10-25T23:05:07Z</dc:date>
+ </item>
+ <item rdf:about="https://example.invalid/scan/3">
+  <title>中古品サイト「架空ネット」への不正アクセス、最大3,709,551件の個人情報が漏えいした可能性</title>
+  <link>https://example.invalid/scan/3</link>
+  <dc:date>2026-10-22T23:05:18Z</dc:date>
+ </item>
+ <item rdf:about="https://example.invalid/scan/4">
+  <title>「架空チョイス」に不正アクセス、4,454,097件の会員情報が流出</title>
+  <link>https://example.invalid/scan/4</link>
+  <dc:date>2026-10-21T23:05:25Z</dc:date>
+ </item>
+ <item rdf:about="https://example.invalid/scan/5">
+  <title>架空マートに不正アクセス、アプリ会員 最大 1,735,154人の個人情報が流出</title>
+  <link>https://example.invalid/scan/5</link>
+  <dc:date>2026-10-26T23:05:22Z</dc:date>
+ </item>
+ <item rdf:about="https://example.invalid/scan/6">
+  <title>架空リゾートのウェブサイトに不正アクセス、約 26,000件の会員情報が漏えい</title>
+  <link>https://example.invalid/scan/6</link>
+  <dc:date>2026-10-26T23:05:27Z</dc:date>
+ </item>
+ <item rdf:about="https://example.invalid/scan/7">
+  <title>架空配信サービスの一部サーバに不正アクセス、延べ約900万件の情報が出力されたと試算</title>
+  <link>https://example.invalid/scan/7</link>
+  <dc:date>2026-10-21T23:05:21Z</dc:date>
+ </item>
+ <item rdf:about="https://example.invalid/scan/8">
+  <title>架空サーバソフト に複数の脆弱性</title>
+  <link>https://example.invalid/scan/8</link>
+  <dc:date>2026-10-25T23:00:10Z</dc:date>
+ </item>
+ <item rdf:about="https://example.invalid/scan/9">
+  <title>架空カードの利用履歴照会サービスに不正アクセス、10月15日 再開</title>
+  <link>https://example.invalid/scan/9</link>
+  <dc:date>2026-10-26T23:05:14Z</dc:date>
+ </item>
+ <item rdf:about="https://example.invalid/scan/10">
+  <title>架空アパレルに不正アクセス、複数の顧客からの問い合わせで発覚</title>
+  <link>https://example.invalid/scan/10</link>
+  <dc:date>2026-10-22T23:05:13Z</dc:date>
+ </item>
+ <item rdf:about="https://example.invalid/scan/11">
+  <title>架空レジャーの会員サイトにリスト型攻撃、159名の会員情報が閲覧された可能性</title>
+  <link>https://example.invalid/scan/11</link>
+  <dc:date>2026-10-22T23:05:03Z</dc:date>
+ </item>
+ <item rdf:about="https://example.invalid/scan/12">
+  <title>架空イベントのお知らせ（創刊 28 周年）</title>
+  <link>https://example.invalid/scan/12</link>
+  <dc:date>2026-10-25T23:20:02Z</dc:date>
+ </item>
+</rdf:RDF>

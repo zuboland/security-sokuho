@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- テスト用の架空の記事（実在の記事・企業ではない）。Security NEXT の RSS 2.0 と同じ構造だけを写した -->
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<channel>
+ <title>テスト用フィード（RSS 2.0）</title>
+ <link>https://example.invalid/snext/</link>
+ <description>架空の記事</description>
+ <item>
+  <title>架空ゲーム子会社に不正アクセス - 「架空くじ」配送情報が流出か</title>
+  <link>https://example.invalid/snext/1</link>
+  <pubDate>Tue, 27 Oct 2026 08:47:36 +0000</pubDate>
+  <description>架空の説明文</description>
+ </item>
+ <item>
+  <title>「架空LLM」に不正プログラム混入 - 認証情報漏洩やコード実行のおそれ</title>
+  <link>https://example.invalid/snext/2</link>
+  <pubDate>Fri, 23 Oct 2026 02:46:59 +0000</pubDate>
+  <description>架空の説明文</description>
+ </item>
+ <item>
+  <title>「架空焼肉」会員 1,078万8,963件の個人情報が漏えい - 運営会社が公表</title>
+  <link>https://example.invalid/snext/3</link>
+  <pubDate>Mon, 26 Oct 2026 02:00:00 +0000</pubDate>
+  <description>架空の説明文</description>
+ </item>
+ <item>
+  <title>架空ブラウザにアップデート - 同梱部品の脆弱性を解消</title>
+  <link>https://example.invalid/snext/4</link>
+  <pubDate>Tue, 27 Oct 2026 01:57:13 +0000</pubDate>
+  <description>架空の説明文</description>
+ </item>
+ <item>
+  <title>メール配信システムで契約者情報が流出 - 架空グループ会社</title>
+  <link>https://example.invalid/snext/5</link>
+  <pubDate>Mon, 26 Oct 2026 14:00:49 +0000</pubDate>
+  <description>架空の説明文</description>
+ </item>
+ <item>
+  <title>先週注目された記事（架空）</title>
+  <link>https://example.invalid/snext/6</link>
+  <pubDate>Sun, 25 Oct 2026 23:51:41 +0000</pubDate>
+  <description>架空の説明文</description>
+ </item>
+</channel>
+</rss>

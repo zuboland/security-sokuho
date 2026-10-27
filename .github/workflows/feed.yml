@@ -23,7 +23,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # 🚨 ref: main＝待機していた回でも「いまの main」を取る（既定はイベント時点の SHA で、先の回が保存した台帳を読まない・監査 R3）
       - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: git の名前（台帳とキャッシュのコミット用）
+        run: |
+          git config user.name "secalert-bot"
+          git config user.email "secalert-bot@users.noreply.github.com"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -50,6 +57,13 @@ jobs:
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
           SECALERT_NVD_MAX: ${{ vars.SECALERT_NVD_MAX || '40' }}
+          # X の話題（未確認の漏えい）。on のときだけ X と Claude を呼ぶ。上限は X と Claude の合計（月）
+          SECALERT_XBUZZ: ${{ vars.SECALERT_XBUZZ || 'off' }}
+          SECALERT_XBUZZ_INTERVAL_H: ${{ vars.SECALERT_XBUZZ_INTERVAL_H || '3' }}
+          SECALERT_XBUZZ_CAP_USD: ${{ vars.SECALERT_XBUZZ_CAP_USD || '15' }}
+          SECALERT_XBUZZ_MIN: ${{ vars.SECALERT_XBUZZ_MIN || '50' }}
+          # X を呼ぶ前に支出の予約を push する（push できない回は呼ばない）
+          SECALERT_XBUZZ_PERSIST: git
       - name: 要約と関連ポストのキャッシュをコミット（リポジトリがキャッシュ＝フォークした人も日本語要約を持てる・X は1件1回だけ）
         # 🚨 人の push と衝突すると push が拒否される（2026-10-22 実測＝その回の Pages 配信まで止まった）。
         #    rebase して3回まで試し、それでも駄目なら「配信は続ける」（キャッシュは次の回に取り直せる）
@@ -58,10 +72,12 @@ jobs:
           git config user.name "secalert-bot"
           git config user.email "secalert-bot@users.noreply.github.com"
           git add feed/data/summaries feed/data/posts feed/data/affected feed/data/snapshots
+          git add feed/data/xbuzz feed/data/breach_news 2>/dev/null || true
           if git diff --cached --quiet; then echo "no cache changes"; exit 0; fi
           git commit -m "chore: 要約・関連ポスト・影響範囲のキャッシュを更新"
           for i in 1 2 3; do
-            git pull --rebase origin main && git push && exit 0
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            git rebase --abort 2>/dev/null || true  # 競合したまま次の試行に進まない（監査 R3）
             echo "push retry $i"; sleep 10
           done
           echo "::warning::キャッシュのコミットを push できませんでした（配信は続けます）"; exit 1

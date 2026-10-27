@@ -1,4 +1,4 @@
-import { getSettings, DEFAULT_BASE, isAllowedBase } from './common.js';
+import { getSettings, DEFAULT_BASE, isAllowedBase, DEFAULT_BREACH_NOTIFY } from './common.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -6,19 +6,20 @@ async function load() {
   const s = await getSettings();
   $('feedBase').value = s.feedBase;
   $('notify').checked = s.notify;
+  $('breachNotify').value = String(s.breachNotify);
 }
 
 $('save').addEventListener('click', async () => {
   let feedBase = $('feedBase').value.trim();
   if (!feedBase.endsWith('/')) feedBase += '/';
   if (!isAllowedBase(feedBase)) { $('msg').textContent = 'https で始まるURLにしてください'; return; }
-  await chrome.storage.sync.set({ feedBase, notify: $('notify').checked });
+  await chrome.storage.sync.set({ feedBase, notify: $('notify').checked, breachNotify: Number($('breachNotify').value) });
   $('msg').textContent = '保存しました。次の確認から反映されます。';
   chrome.runtime.sendMessage({ type: 'check-now' });
 });
 
 $('reset').addEventListener('click', async () => {
-  await chrome.storage.sync.set({ feedBase: DEFAULT_BASE, notify: true });
+  await chrome.storage.sync.set({ feedBase: DEFAULT_BASE, notify: true, breachNotify: DEFAULT_BREACH_NOTIFY });
   await load();
   $('msg').textContent = '既定に戻しました。';
 });

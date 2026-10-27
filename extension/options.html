@@ -18,7 +18,14 @@
 <body>
 <h1>設定</h1>
 <label><input type="checkbox" id="notify"> 要対応のときにOSの通知を出す</label>
-<p class="muted">通知は「悪用が確認された脆弱性」で「あなたの版数が影響を受ける」ときだけ。1件につき1回です。</p>
+<p class="muted">ブラウザの通知は「悪用が確認された脆弱性」で「あなたの版数が影響を受ける」ときだけ。1件につき1回です。オフにすると漏えいの通知も止まります。</p>
+<label for="breachNotify">サービスの情報漏えいを通知する大きさ</label>
+<select id="breachNotify">
+  <option value="10000000">1,000万件以上（既定・週に1〜2件ほど）</option>
+  <option value="1000000">100万件以上（週に数件）</option>
+  <option value="0">通知しない（一覧だけ見る）</option>
+</select>
+<p class="muted">通知するのは、発表から3日以内で件数が分かり、この大きさ以上の件だけです。報道は「漏えいした」と言い切っている件、Have I Been Pwned は1年以内に起きてパスワードかお金の情報を含む件に限ります。X で話題になっているだけの未確認の件は、通知せず一覧に「未確認」として出します。</p>
 <label for="feedBase">速報の配信元（https・末尾 /）</label>
 <input type="url" id="feedBase" placeholder="https://zuboland.github.io/security-sokuho/">
 <p class="muted">自分でフィードを公開している場合に変えます。通常はそのままで構いません。</p>

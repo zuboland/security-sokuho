@@ -1,4 +1,4 @@
-import { settingsUrl } from './common.js';
+import { settingsUrl, countLabel } from './common.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -97,10 +97,48 @@ function renderAlerts(state) {
     </div>`).join('');
 }
 
+function breachRow(i) {
+  const rumor = i.type === 'rumor';
+  const tag = rumor ? '<span class="tag unconfirmed">未確認</span>' : i.basis === 'news' ? '<span class="tag news">報道</span>' : '<span class="tag">確認済み</span>';
+  // HIBP は「漏えいが起きた日」と「掲載日」を分けて出す（古い漏えいの新規掲載を最近の事故に見せない）
+  const when = i.basis === 'hibp' && i.breach_date ? `漏えい ${i.breach_date}・掲載 ${i.published || ''}` : (i.published || '');
+  // 未確認の件は件数を出さない（配信に入っていても。X 由来の数字を確かな数のように見せない）
+  const meta = [when, rumor ? '' : countLabel(i.count), (i.data_ja || []).slice(0, 4).join('・')].filter(Boolean).join('　');
+  return `
+    <div class="row${rumor ? ' rumor' : ''}">
+      <div class="t">${tag}${esc(i.title_ja || '')}</div>
+      <div class="tiny mono">${esc(meta)}</div>
+      ${rumor ? `<p class="caution">${esc(i.caution_ja || '')}</p>` : ''}
+      ${i.note_ja ? `<p class="tiny">${esc(i.note_ja)}</p>` : ''}
+      ${(i.advice_ja || []).length ? `<ul class="advice">${i.advice_ja.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
+      <div class="tiny">${(i.sources || []).filter((s) => /^https:\/\//.test(s?.url || '')).slice(0, 3).map((s) => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`).join('・')}</div>
+    </div>`;
+}
+
+function renderBreaches(state) {
+  const c = $('breach-confirmed'); const r = $('breach-rumor');
+  if (!state || state.breaches_ok === false) { c.innerHTML = '<p class="tiny">漏えいの一覧を取得できませんでした（配信元に届かないか、形が違います）。</p>'; r.innerHTML = ''; return; }
+  const items = state.breaches || [];
+  const failed = (state.breaches_failed || []).length ? `<p class="tiny">※ 取れていない情報源：${esc(state.breaches_failed.join('・'))}</p>` : '';
+  const conf = items.filter((i) => i.type === 'confirmed').slice(0, 10);
+  const rum = items.filter((i) => i.type === 'rumor').slice(0, 5);
+  const stale = state.breaches_stale ? '<p class="tiny">※ 漏えいの情報源が48時間以上更新されていません。この一覧は古い可能性があり、通知も止めています。</p>' : '';
+  c.innerHTML = failed + stale + (conf.length ? conf.map(breachRow).join('') : '<p class="tiny">直近30日に、見ている情報源で報じられた漏えいはありません。</p>')
+    + '<p class="tiny">一覧は報道（ScanNetSecurity・Security NEXT の記事）と <a href="https://haveibeenpwned.com/" target="_blank" rel="noopener">Have I Been Pwned</a>（<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>）によります。すべての漏えいが載るわけではありません。</p>';
+  // X の確認が動いていない・止まっているときに「話題はありません」と言わない（監査 R2・R3）
+  const w = state.rumor_watch;
+  const lastOk = w?.last_ok_at ? Date.parse(w.last_ok_at) : NaN;
+  if (!w || !w.enabled) r.innerHTML = '<p class="tiny">X の話題の確認は行っていません。</p>';
+  else if (!Number.isFinite(lastOk) || Date.now() - lastOk > 12 * 3600 * 1000) r.innerHTML = (rum.length ? rum.map(breachRow).join('') : '') + '<p class="tiny">X の話題の確認が12時間以上止まっています。</p>';
+  else r.innerHTML = rum.length ? rum.map(breachRow).join('') : '<p class="tiny">いま X で話題の未確認の漏えいはありません（3時間ごとに確認）。</p>';
+}
+
 async function load() {
   const { state } = await chrome.storage.local.get('state');
   renderStatus(state);
   renderAlerts(state);
+  renderBreaches(state);
+  if (location.hash === '#breaches') $('breaches').scrollIntoView();
 }
 
 $('recheck').addEventListener('click', async () => {

@@ -149,12 +149,81 @@ def main():
         pop.screenshot(path=str(HERE.parent / "docs" / "popup_required.png"))
         srv2.shutdown(); srv2.server_close()
 
+        # 7b. サービスの漏えい（breaches.json）：鳴らすのは確認済み・新しい・しきい値以上だけ。未確認は旗が立っていても鳴らさない
+        print("step: breaches")
+        import datetime
+        today = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+        old = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=10)).date().isoformat()
+        adv = ["パスワードを変える", "二段階認証", "メールのリンクを開かない"]
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        def bitem(id_, count, published, title, eligible=True, typ="confirmed", **kw):
+            d = {"id": id_, "type": typ, "basis": "news" if typ == "confirmed" else "x", "title_ja": title, "count": count, "data_ja": [], "published": published, "notify_eligible": eligible, "advice_ja": adv, "sources": [{"name": "ScanNetSecurity", "url": f"https://example.invalid/{id_}"}]}
+            d.update(kw); return d
+        bitems = [
+            bitem("news-big", 20000000, today, "大きな漏えい 2,000万件", published_at=now_iso),
+            bitem("news-big2", 15000000, today, "大きな漏えい2 1,500万件", published_at=now_iso),
+            bitem("news-big3", 12000000, today, "大きな漏えい3 1,200万件", published_at=now_iso),
+            bitem("news-mid", 5000000, today, "中くらいの漏えい 500万件", published_at=now_iso),
+            bitem("news-old", 30000000, old, "古い漏えい 3,000万件"),
+            bitem("rumor-x", 99000000, today, "X で「ほげペイ」の漏えいについての投稿が増えています（未確認）", typ="rumor", service="ほげペイ", caution_ja="未確認です。X で投稿が増えているだけです。",
+                  sources=[{"name": "X の検索結果", "url": "https://x.com/search?q=x"}, {"name": "悪いリンク", "url": "javascript:alert(1)"}]),
+        ]
+        def write_breaches(rumor_watch=None):
+            (feed_dir / "breaches.json").write_text(json.dumps({"schema": 1, "window_days": 30, "sources_failed": [], "rumor_watch": rumor_watch or {"enabled": True, "last_ok_at": now_iso}, "items": bitems}), encoding="utf-8")
+        def breach_keys():
+            return sorted(k for k in sw.evaluate("() => chrome.storage.local.get(null)") if k.startswith("notified:secalert-breach:"))
+        write_feed(feed_dir, None); write_breaches()
+        srvB = serve(feed_dir); baseB = f"http://127.0.0.1:{srvB.server_address[1]}/"
+        sw.evaluate("base => chrome.storage.sync.set({ feedBase: base, notify: true, breachNotify: 10000000 })", baseB)
+        st = run_check(sw)
+        keys = breach_keys()
+        check("漏えい：1回の確認で鳴るのは最大2件（1,000万件以上・新しい・確認済み）", keys == ["notified:secalert-breach:news-big", "notified:secalert-breach:news-big2"], keys)
+        check("漏えい：未確認（rumor）は旗が立っていても鳴らない", not any("rumor" in k for k in keys))
+        check("漏えい：一覧に6件入る", st.get("breaches_ok") and len(st.get("breaches", [])) == 6, len(st.get("breaches", [])))
+        run_check(sw)
+        keys2 = breach_keys()
+        check("漏えい：既読の2件が3件目を塞がない（2回目の確認で3件目が鳴る）", keys2 == keys + ["notified:secalert-breach:news-big3"], keys2)
+        run_check(sw)
+        check("漏えい：3回目は増えない（1件1回）", breach_keys() == keys2, breach_keys())
+        sw.evaluate("() => chrome.storage.sync.set({ breachNotify: 1000000 })")
+        run_check(sw)
+        keys3 = breach_keys()
+        check("漏えい：100万件に下げると500万件の件も鳴る（古い件は鳴らない）", keys3 == sorted(keys2 + ["notified:secalert-breach:news-mid"]), keys3)
+        pb = ctx.new_page(); pb.goto(f"chrome-extension://{ext_id}/popup.html#breaches"); pb.wait_for_timeout(800)
+        bt = pb.inner_text("#breaches")
+        check("ポップアップ：確認済みと未確認が分かれ、未確認に注意文が出る", "確認済み・報道" in bt and "未確認" in bt and "X で投稿が増えているだけ" in bt, bt[:160].replace("\n", " "))
+        check("ポップアップ：X の確認が動いているときは「3時間ごとに確認」と出す（話題があるときは一覧）", "ほげペイ" in bt, bt[-160:].replace("\n", " "))
+        hrefs = pb.eval_on_selector_all("#breaches a", "els => els.map(e => e.getAttribute('href'))")
+        check("ポップアップ：https 以外のリンクは出さない", all(h.startswith("https://") for h in hrefs) and not any("javascript" in h for h in hrefs), hrefs)
+        pb.screenshot(path=str(HERE.parent / "docs" / "popup_breaches.png"), full_page=True)
+        # X の確認が止まっている（off）なら「話題はありません」と言わない
+        write_breaches(rumor_watch={"enabled": False, "last_ok_at": None}); run_check(sw); pb.reload(); pb.wait_for_timeout(600)
+        check("ポップアップ：X の確認が off なら「確認は行っていません」と出す", "確認は行っていません" in pb.inner_text("#breach-rumor"), pb.inner_text("#breach-rumor")[:80])
+        # 漏えいの情報源が古い（breaches_as_of が3日前）：一覧は出すが通知しない
+        bitems.append(bitem("news-new", 50000000, today, "新しい大きな漏えい", published_at=now_iso)); write_breaches()
+        status = json.loads((feed_dir / "status.json").read_text(encoding="utf-8"))
+        status["breaches_as_of"] = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=3)).isoformat()
+        (feed_dir / "status.json").write_text(json.dumps(status), encoding="utf-8")
+        st = run_check(sw)
+        check("漏えい：情報源が48時間以上古いと鳴らさない（一覧は出す）", st.get("breaches_stale") is True and st.get("breaches_ok") and "notified:secalert-breach:news-new" not in breach_keys(), st.get("breaches_stale"))
+        # data_as_of が「ある形式で null」＝根拠の片方が取れていない → 判定不能（監査 R1 F04・R3）
+        status["data_as_of"] = None
+        (feed_dir / "status.json").write_text(json.dumps(status), encoding="utf-8")
+        st = run_check(sw)
+        check("data_as_of が null → unknown（stale）・generated_at で補わない", st["result"]["verdict"] == "unknown" and st["result"]["reason"] == "stale", st["result"])
+        write_feed(feed_dir, None, generated_at="2026-10-01T00:00:00Z")
+        st = run_check(sw)
+        check("漏えい：配信全体が古いときは一覧を出すが古い扱い（通知しない・監査 R4 F05）", st.get("breaches_ok") is True and st.get("breaches_stale") is True, (st.get("breaches_ok"), st.get("breaches_stale")))
+        pb.close(); srvB.shutdown(); srvB.server_close()
+        sw.evaluate("() => chrome.storage.sync.set({ breachNotify: 10000000 })")
+
         # 8. 本物のフィード（固定応答から build した public/）で判定する
         #    Playwright の Chromium は安定版より古い（145）ので、悪用確認つきの修正版（153.x）未満＝required になるはず
         import subprocess
         feed_dir_real = HERE.parent / "feed"
         pub = tmp / "public"
-        env = dict(os.environ, SECALERT_FIXTURES=str(feed_dir_real / "test" / "fixtures"), SECALERT_PUBLIC=str(pub), SECALERT_SUMMARY_DIR=str(tmp / "sum"), SECALERT_POSTS_DIR=str(tmp / "posts"), SECALERT_AI="none")
+        env = dict(os.environ, SECALERT_FIXTURES=str(feed_dir_real / "test" / "fixtures"), SECALERT_PUBLIC=str(pub), SECALERT_SUMMARY_DIR=str(tmp / "sum"), SECALERT_POSTS_DIR=str(tmp / "posts"), SECALERT_AI="none",
+                   SECALERT_SNAPSHOT_DIR=str(tmp / "snap"), SECALERT_AFFECTED_DIR=str(tmp / "aff"), SECALERT_XBUZZ_DIR=str(tmp / "xbuzz"), SECALERT_XBUZZ="off", SECALERT_NEWS_CACHE=str(tmp / "news" / "seen.json"))
         r = subprocess.run(["node", str(feed_dir_real / "src" / "build.js")], env=env, capture_output=True, text=True, encoding="utf-8", cwd=str(feed_dir_real))
         check("本物のフィードが build できる", r.returncode == 0, (r.stdout + r.stderr).strip()[-200:])
         srv3 = serve(pub); base3 = f"http://127.0.0.1:{srv3.server_address[1]}/"

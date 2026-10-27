@@ -10,6 +10,9 @@
   "https://jvndb.jvn.jp/myjvn": "jvn_maintenance.html",
   "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-relnotes-security": "edge.html",
   "https://hn.algolia.com/api/v1/search": "hn_empty.json",
+  "https://haveibeenpwned.com/api/v3/breaches": "hibp_breaches.json",
+  "https://scan.netsecurity.ne.jp/rss/index.rdf": "scannetsecurity.rdf",
+  "https://www.security-next.com/feed": "securitynext.xml",
   "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2026-87491": "nvd_CVE-2026-87491.json",
   "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2026-65400": "nvd_CVE-2026-65400.json"
 }

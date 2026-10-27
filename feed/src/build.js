@@ -23,6 +23,12 @@ import { compareVersions, maxVersion } from './version.js';
 import { applySummaries } from './summarize.js';
 import { attachPosts } from './sources/social.js';
 import { collectAffected } from './sources/nvd.js';
+import { fetchHibp } from './sources/hibp.js';
+import { fetchScan, fetchSnext, accumulateNews } from './sources/breach_news.js';
+import { runXBuzz } from './sources/x_buzz.js';
+import { assembleBreaches, BREACH_WINDOW_DAYS, HIBP_NOTE } from './breaches.js';
+
+const BREACH_SOURCES = ['hibp', 'scan', 'snext', 'xbuzz'];
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const PUBLIC_DIR = process.env.SECALERT_PUBLIC || path.join(here, '..', 'public');
@@ -348,9 +354,17 @@ export async function collect() {
     settle('jpcert', fetchJpcert()),
     settle('ipa', fetchIpa()),
     settle('jvn', fetchJvn()),
+    // サービス側の漏えい（breaches.json）。速報（ブラウザ）の判定には使わない
+    settle('hibp', fetchHibp(), { isEmpty: (v) => !Array.isArray(v) || v.length === 0 }),
+    settle('scan', fetchScan()),
+    settle('snext', fetchSnext()),
   ]);
   const got = Object.fromEntries(results.map((r) => [r.name, r.value]));
-  const failed = results.filter((r) => !r.ok).map((r) => ({ source: r.name, error: r.error, using_snapshot_from: r.snapshot_from || null }));
+  // 公開する status に、内部の絶対パスや長い例外本文を出さない（監査 R5 F12・既存）
+  // （URL の「//host/path」は残す＝直前が英数字・コロン・スラッシュの位置からは始めない）
+  // 引用符で囲まれた部分（空白入りのパスなど）はまるごと伏せてから、残ったパスを伏せる（監査 R6 F09）
+  const publicError = (s) => String(s || '').replace(/'[^']*'|"[^"]*"/g, "'<…>'").replace(/(?<![\w:/\\])(?:[A-Za-z]:)?(?:[\\/][^\s'"\\/:]+){2,}[\\/]?/g, '<path>').slice(0, 160);
+  const failed = results.filter((r) => !r.ok).map((r) => ({ source: r.name, error: publicError(r.error), using_snapshot_from: r.snapshot_from || null }));
   // 情報源ごとの「最後に正常に取れた時刻」。snapshot を使った回は古い時刻のまま＝クライアントはこれで鮮度を見る（監査R4-H2）
   const nowIso = new Date().toISOString();
   const sources = Object.fromEntries(results.map((r) => [r.name, { ok: r.ok, last_ok_at: r.ok ? nowIso : (r.snapshot_from || null) }]));
@@ -365,7 +379,7 @@ function stable(obj) {
   return JSON.stringify(obj, null, 1) + '\n';
 }
 
-export async function writeOutputs({ items, alerts, browsers, failed, generatedAt, affected = {}, sources = {} }) {
+export async function writeOutputs({ items, alerts, browsers, failed, generatedAt, affected = {}, sources = {}, breaches = null }) {
   await mkdir(PUBLIC_DIR, { recursive: true });
   // 静的ページ（プライバシーポリシー等）は feed/static/ からそのまま配信に乗せる
   const staticDir = path.join(here, '..', 'static');
@@ -376,8 +390,24 @@ export async function writeOutputs({ items, alerts, browsers, failed, generatedA
   const schema = 1;
   await writeFile(path.join(PUBLIC_DIR, 'feed.json'), stable({ schema, window_days: WINDOW_DAYS, items }));
   // 期間と「取れなかった情報源」を一緒に配る（拡張が『直近N日』を決め打ちせず、欠けを表示できるように）
-  await writeFile(path.join(PUBLIC_DIR, 'alerts.json'), stable({ schema, window_days: WINDOW_DAYS, sources_failed: failed.map((f) => f.source), items: alerts }));
+  // 🚨 脆弱性の情報源と漏えいの情報源を混ぜない（配布中の 0.1.1 拡張・常駐アプリは sources_failed を「取れていない情報源」と表示する・監査 R3）
+  const vulnFailed = failed.filter((f) => !BREACH_SOURCES.includes(f.source));
+  const breachFailed = failed.filter((f) => BREACH_SOURCES.includes(f.source)).map((f) => f.source);
+  await writeFile(path.join(PUBLIC_DIR, 'alerts.json'), stable({ schema, window_days: WINDOW_DAYS, sources_failed: vulnFailed.map((f) => f.source), items: alerts }));
   await writeFile(path.join(PUBLIC_DIR, 'browsers.json'), stable({ schema, ...browsers }));
+  if (breaches) {
+    await writeFile(path.join(PUBLIC_DIR, 'breaches.json'), stable({
+      schema,
+      window_days: BREACH_WINDOW_DAYS,
+      sources_failed: breachFailed,
+      rumor_watch: breaches.rumor_watch,
+      attribution: [
+        { name: 'Have I Been Pwned', url: 'https://haveibeenpwned.com/', license: 'CC BY 4.0', license_url: 'https://creativecommons.org/licenses/by/4.0/', changes: HIBP_NOTE },
+        { name: 'ScanNetSecurity・Security NEXT', note: '報道の記事への URL と、見出しから読んだ名前・件数だけを使う（見出しの文・本文は配らない）' },
+      ],
+      items: breaches.items,
+    }));
+  }
   // affected.json は fetched_at を落として安定させる（中身が同じなら変わらない）
   const aff = Object.fromEntries(Object.entries(affected).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, { published: v.published, last_modified: v.last_modified, cvss: v.cvss, status: v.status || (v.ranges?.length ? 'analyzed' : 'awaiting'), ranges: v.ranges }]));
   const pending = [...(affected.__pending || [])].sort();
@@ -385,7 +415,53 @@ export async function writeOutputs({ items, alerts, browsers, failed, generatedA
   // data_as_of＝速報の根拠（Chrome Releases・KEV）のうち古い方の最終正常取得時刻。snapshot で作った回はここが古くなる
   const essential = ['chrome_releases', 'kev'].map((k) => sources[k]?.last_ok_at).filter(Boolean).map((t) => Date.parse(t));
   const dataAsOf = essential.length === 2 ? new Date(Math.min(...essential)).toISOString() : null;
-  await writeFile(path.join(PUBLIC_DIR, 'status.json'), stable({ schema, generated_at: generatedAt, data_as_of: dataAsOf, sources, sources_failed: failed, counts: { items: items.length, alerts: alerts.length } }));
+  // 漏えいの鮮度は別に持つ（ブラウザの鮮度で漏えいの通知を止めない／漏えいの情報源が止まっても気づける・監査 R1 F14・R3）
+  const vulnSources = Object.fromEntries(Object.entries(sources).filter(([k]) => !BREACH_SOURCES.includes(k)));
+  const breachSources = Object.fromEntries(Object.entries(sources).filter(([k]) => BREACH_SOURCES.includes(k)));
+  const bTimes = ['hibp', 'scan', 'snext'].map((k) => breachSources[k]?.last_ok_at);
+  const breachesAsOf = bTimes.every(Boolean) ? new Date(Math.min(...bTimes.map((t) => Date.parse(t)))).toISOString() : null;
+  await writeFile(path.join(PUBLIC_DIR, 'status.json'), stable({ schema, generated_at: generatedAt, data_as_of: dataAsOf, sources: vulnSources, sources_failed: vulnFailed, breach_sources: breachSources, breaches_as_of: breachesAsOf, counts: { items: items.length, alerts: alerts.length, breaches: breaches?.items?.length ?? 0 } }));
+}
+
+/**
+ * X の支出台帳を「呼ぶ前に」リポジトリへ push する（Actions の中だけ・SECALERT_XBUZZ_PERSIST=git）。
+ * push できなければ例外＝x_buzz は X を呼ばない。台帳以外のファイルには触らない
+ */
+async function gitPersist(message) {
+  const { execFile } = await import('node:child_process');
+  const { promisify } = await import('node:util');
+  const run = promisify(execFile);
+  const repo = path.join(here, '..', '..');
+  const git = (...args) => run('git', ['-C', repo, ...args]);
+  // autostash の戻しが衝突したキャッシュは、衝突の印が入ったまま後段でコミットされる。いまの HEAD の中身に戻して捨てる
+  // （捨てたキャッシュは次の回に取り直せる。予約の state.json は HEAD にコミット済みなので戻しても消えない・監査 R5 F03）
+  const cleanConflicts = async () => {
+    const { stdout } = await git('diff', '--name-only', '--diff-filter=U');
+    const conflicted = stdout.split('\n').filter(Boolean);
+    if (!conflicted.length) return;
+    await git('checkout', 'HEAD', '--', ...conflicted);
+    try { await git('stash', 'drop'); } catch { /* 残っていなければよい */ }
+    console.warn(`[xbuzz] キャッシュの戻しが衝突したので HEAD の中身に戻しました: ${conflicted.length} 件`);
+  };
+  await git('add', 'feed/data/xbuzz');
+  try { await git('commit', '-m', message); } catch { /* 変更なし */ }
+  for (let i = 0; i < 3; i++) {
+    // 🚨 --autostash：この時点で作業ツリーには取得したばかりのキャッシュ（snapshots 等）の変更がある。
+    //    無いと pull --rebase が毎回「unstaged changes」で失敗し、X を一度も呼べなかった（監査 R4 F01）
+    try {
+      await git('pull', '--rebase', '--autostash', 'origin', 'main');
+      await cleanConflicts();
+      await git('push', 'origin', 'HEAD:main');
+      return;
+    } catch (e) {
+      // 🚨 先に rebase を中止してから後始末する（rebase の途中で HEAD に戻すと、予約の state.json が上流の中身になる）。
+      //    push に失敗した回も、衝突の印が入ったキャッシュを後段に残さない（監査 R6 F02）
+      try { await git('rebase', '--abort'); } catch { /* rebase 中でなければよい */ }
+      await cleanConflicts().catch(() => {});
+      if (i === 2) throw new Error(`push できない: ${String(e.message).split('\n')[0]}`);
+      await new Promise((r) => setTimeout(r, 5000));
+    }
+  }
 }
 
 export async function main() {
@@ -412,7 +488,17 @@ export async function main() {
   for (const key of ['chrome', 'edge']) for (const c of browsers[key]?.uncovered_cves || []) cvesForRanges.unshift(c);
   const affected = await collectAffected(cvesForRanges);
   reconcileBrowsers(browsers, affected);
-  await writeOutputs({ items, alerts, browsers, failed, generatedAt: new Date().toISOString(), affected, sources });
+  // X の話題（未確認）：3時間に1回だけ実際に見に行く。それ以外の回は前回の一覧を使う
+  // 🚨 X の話題で何が起きても、速報（ブラウザ）と漏えいの確認済みの配信は止めない
+  let xb;
+  try { xb = await runXBuzz({ persist: process.env.SECALERT_XBUZZ_PERSIST === 'git' ? gitPersist : null }); } catch (e) { console.warn(`[xbuzz] 例外: ${e.message}`); xb = { status: 'error', items: [], watch: { enabled: true, last_ok_at: null }, spent_usd: null, month: null }; }
+  const xbOk = ['off', 'waiting', 'ran', 'armed'].includes(xb.status);
+  if (!xbOk) failed.push({ source: 'xbuzz', error: `x_buzz ${xb.status}`, using_snapshot_from: null });
+  sources.xbuzz = { ok: xbOk, status: xb.status, last_ok_at: xb.watch?.last_ok_at || null };
+  // 報道は30日分ためたものと今回の RSS をまとめる（RSS が取れなかった回はためた分だけ）
+  const news = await accumulateNews([...(got.scan || []), ...(got.snext || [])]);
+  const breaches = assembleBreaches({ hibp: got.hibp, news, rumors: xb.items, rumorWatch: xb.watch || { enabled: false, last_ok_at: null } });
+  await writeOutputs({ items, alerts, browsers, failed, generatedAt: new Date().toISOString(), affected, sources, breaches });
   console.log(`items ${items.length} / alerts ${alerts.length} / chrome min_safe ${browsers.chrome.min_safe} / edge min_safe ${browsers.edge.min_safe} / failed ${failed.map((f) => f.source).join(',') || 'none'}`);
 }
 

@@ -21,6 +21,9 @@ async function build(publicDir) {
     SECALERT_POSTS_DIR: path.join(publicDir, '_posts'),
     SECALERT_AFFECTED_DIR: path.join(publicDir, '_affected'),
     SECALERT_SNAPSHOT_DIR: path.join(publicDir, '_snapshots'),
+    SECALERT_XBUZZ_DIR: path.join(publicDir, '_xbuzz'),
+    SECALERT_NEWS_CACHE: path.join(publicDir, '_news', 'seen.json'),
+    SECALERT_XBUZZ: 'off',
     SECALERT_NVD_MAX: '20',
     SECALERT_AI: 'none',
   };
