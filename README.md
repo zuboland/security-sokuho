@@ -65,7 +65,7 @@
 | [JVN iPedia](https://jvndb.jvn.jp/) | 日本語の脆弱性DB（止まっていることがあるので、無くても動く作り） |
 | [Have I Been Pwned](https://haveibeenpwned.com/)（[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)） | 流出データが確認された漏えいの一覧。名前・件数・漏れた項目・日付だけを抜き出し、日本語の題名・項目名を付け、件数を概数にして配る（説明文は配らない）。ソースコードの MIT とは別のライセンス |
 | [ScanNetSecurity](https://scan.netsecurity.ne.jp/) ／ [Security NEXT](https://www.security-next.com/) の RSS | 日本の漏えい報道（見出しから名前と件数を読み、記事へリンクするだけ。見出しの文・本文は配らない）。**公式発表そのものではない**ので「報道」と表示 |
-| X API（有料・任意） | 話題になっている未確認の漏えい。`SECALERT_XBUZZ=on` のときだけ・3時間に1回・月の上限つき（`SECALERT_XBUZZ_CAP_USD`） |
+| X API（有料・任意） | 話題になっている未確認の漏えい。`SECALERT_XBUZZ=on` と `SECALERT_XBUZZ_AI=anthropic`（名前の抜き出しに使う AI・要約の `SECALERT_AI` とは別）のときだけ・3時間に1回・月の上限つき（`SECALERT_XBUZZ_CAP_USD`・X と AI の合計） |
 
 ## 使う
 

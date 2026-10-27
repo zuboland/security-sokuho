@@ -164,7 +164,8 @@ export async function runXBuzz({
   now = new Date(),
   token = process.env.X_BEARER_TOKEN,
   enabled = (process.env.SECALERT_XBUZZ || 'off') === 'on',
-  provider = (process.env.SECALERT_AI || 'none').toLowerCase(),
+  // 名前の抜き出しに使う AI は専用の設定で決める（要約の SECALERT_AI とは別。要約を PC の claude -p に移しても、こちらは止まらない）
+  provider = (process.env.SECALERT_XBUZZ_AI || process.env.SECALERT_AI || 'none').toLowerCase(),
   intervalH = Number(process.env.SECALERT_XBUZZ_INTERVAL_H || 3),
   capUsd = Number(process.env.SECALERT_XBUZZ_CAP_USD || 15),
   minCount = Number(process.env.SECALERT_XBUZZ_MIN || 50),
