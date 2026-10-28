@@ -982,6 +982,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/192075",
+   "date": "2026-10-28T13:53:42.000Z",
+   "leak": true,
+   "count": null,
+   "certain": true,
+   "name": "So-net",
+   "incident": "news-ww2f5"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/191655",
    "date": "2026-10-28T14:38:54.000Z",
    "leak": false,
