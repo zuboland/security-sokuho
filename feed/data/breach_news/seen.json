@@ -999,6 +999,16 @@
    "certain": false,
    "name": null,
    "incident": "news-pvs3ga"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/191989",
+   "date": "2026-10-28T14:40:59.000Z",
+   "leak": true,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1kryckm"
   }
  ]
 }
