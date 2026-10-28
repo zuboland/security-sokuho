@@ -922,6 +922,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/192047",
+   "date": "2026-10-27T23:19:26.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-ctpj8"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/192044",
    "date": "2026-10-27T23:41:00.000Z",
    "leak": false,
