@@ -969,6 +969,16 @@
    "certain": false,
    "name": null,
    "incident": "news-1yjyyff"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/192099",
+   "date": "2026-10-28T08:45:23.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1xpi68v"
   }
  ]
 }
