@@ -1229,6 +1229,126 @@
    "certain": false,
    "name": null,
    "incident": "news-1749cly"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/10/30/56625.html",
+   "date": "2026-10-29T23:05:03.000Z",
+   "leak": true,
+   "count": 1260000,
+   "certain": true,
+   "name": "阪急百貨店・阪神百貨店予約サイト",
+   "incident": "news-2i3xqb"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/10/30/56626.html",
+   "date": "2026-10-29T23:05:05.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-br5pi4"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/10/30/56627.html",
+   "date": "2026-10-29T23:05:08.000Z",
+   "leak": true,
+   "count": null,
+   "certain": true,
+   "name": null,
+   "incident": "news-1mvrkvd"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/10/30/56628.html",
+   "date": "2026-10-29T23:05:10.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-virviy"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/10/30/56629.html",
+   "date": "2026-10-29T23:05:12.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1uq79lj"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/10/30/56630.html",
+   "date": "2026-10-29T23:05:14.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-my5oq9"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/10/30/56631.html",
+   "date": "2026-10-29T23:05:18.000Z",
+   "leak": true,
+   "count": null,
+   "certain": true,
+   "name": "GETTIIS",
+   "incident": "news-qfwfdw"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/10/30/56632.html",
+   "date": "2026-10-29T23:05:20.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-6r36y3"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/10/30/56633.html",
+   "date": "2026-10-29T23:05:24.000Z",
+   "leak": true,
+   "count": 2141986,
+   "certain": true,
+   "name": null,
+   "incident": "news-ukag66"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/10/30/56634.html",
+   "date": "2026-10-29T23:05:26.000Z",
+   "leak": true,
+   "count": null,
+   "certain": true,
+   "name": null,
+   "incident": "news-1ecp5bx"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/10/30/56635.html",
+   "date": "2026-10-29T23:10:02.000Z",
+   "leak": true,
+   "count": null,
+   "certain": true,
+   "name": "2026年9月の情報漏えい",
+   "incident": "news-sneak0"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/192196",
+   "date": "2026-10-29T23:23:32.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-60e48t"
   }
  ]
 }
