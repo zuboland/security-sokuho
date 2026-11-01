@@ -1429,6 +1429,156 @@
    "certain": false,
    "name": null,
    "incident": "news-14tndw0"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56636.html",
+   "date": "2026-11-01T23:00:03.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1ss9jk7"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56637.html",
+   "date": "2026-11-01T23:00:07.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-pws7m2"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56638.html",
+   "date": "2026-11-01T23:05:02.000Z",
+   "leak": true,
+   "count": 301,
+   "certain": true,
+   "name": "WorldShopping",
+   "incident": "news-12o01nd"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56639.html",
+   "date": "2026-11-01T23:05:05.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-if6z64"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56640.html",
+   "date": "2026-11-01T23:05:07.000Z",
+   "leak": true,
+   "count": 50000,
+   "certain": true,
+   "name": null,
+   "incident": "news-1wbwrss"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56641.html",
+   "date": "2026-11-01T23:05:10.000Z",
+   "leak": true,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-10pxux5"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56642.html",
+   "date": "2026-11-01T23:05:12.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1xgubjq"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56643.html",
+   "date": "2026-11-01T23:05:17.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-fvz1wj"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56644.html",
+   "date": "2026-11-01T23:05:21.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1moavqg"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56645.html",
+   "date": "2026-11-01T23:05:23.000Z",
+   "leak": true,
+   "count": 51628280,
+   "certain": true,
+   "name": null,
+   "incident": "news-snb0id"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56646.html",
+   "date": "2026-11-01T23:05:26.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1qsmowy"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56647.html",
+   "date": "2026-11-01T23:05:29.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-l6spof"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56648.html",
+   "date": "2026-11-01T23:05:33.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-svy7bo"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56649.html",
+   "date": "2026-11-01T23:05:36.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1hvb25d"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/02/56650.html",
+   "date": "2026-11-01T23:10:03.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1r64f6b"
   }
  ]
 }
