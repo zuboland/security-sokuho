@@ -1929,6 +1929,26 @@
    "certain": false,
    "name": null,
    "incident": "news-12i1d02"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/05/56669.html",
+   "date": "2026-11-04T23:00:03.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-hh40vo"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/05/56670.html",
+   "date": "2026-11-04T23:00:07.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1vex5fe"
   }
  ]
 }
