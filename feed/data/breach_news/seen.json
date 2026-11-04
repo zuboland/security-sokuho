@@ -1859,6 +1859,26 @@
    "certain": false,
    "name": null,
    "incident": "news-d2auov"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/04/56668.html",
+   "date": "2026-11-03T23:25:02.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-14qy06s"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/192322",
+   "date": "2026-11-03T23:50:44.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-acumbk"
   }
  ]
 }
