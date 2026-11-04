@@ -1912,6 +1912,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/192254",
+   "date": "2026-11-04T10:46:55.000Z",
+   "leak": true,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-16h66g6"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/192171",
    "date": "2026-11-04T14:30:09.000Z",
    "leak": false,
