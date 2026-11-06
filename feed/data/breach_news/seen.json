@@ -2372,6 +2372,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/192393",
+   "date": "2026-11-06T10:59:34.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-cvfbnw"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/192342",
    "date": "2026-11-06T11:11:33.000Z",
    "leak": true,
