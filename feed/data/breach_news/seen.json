@@ -2342,6 +2342,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/192453",
+   "date": "2026-11-06T01:46:20.000Z",
+   "leak": true,
+   "count": null,
+   "certain": true,
+   "name": "ドコモオンラインショップ",
+   "incident": "news-1m738gt"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/192451",
    "date": "2026-11-06T02:02:00.000Z",
    "leak": false,
