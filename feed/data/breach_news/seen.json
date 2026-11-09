@@ -2539,6 +2539,26 @@
    "certain": false,
    "name": null,
    "incident": "news-mrahac"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/192500",
+   "date": "2026-11-08T23:52:33.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1ppurmm"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/192507",
+   "date": "2026-11-08T23:55:25.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1qjtkpj"
   }
  ]
 }
