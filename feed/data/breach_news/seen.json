@@ -2619,6 +2619,16 @@
    "certain": false,
    "name": "ネットマイル",
    "incident": "news-hz0izj"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/192347",
+   "date": "2026-11-09T12:27:52.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1b8smz9"
   }
  ]
 }
