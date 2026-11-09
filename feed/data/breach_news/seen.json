@@ -2609,6 +2609,16 @@
    "certain": false,
    "name": null,
    "incident": "news-np6wlh"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/192460",
+   "date": "2026-11-09T11:13:30.000Z",
+   "leak": true,
+   "count": null,
+   "certain": false,
+   "name": "ネットマイル",
+   "incident": "news-hz0izj"
   }
  ]
 }
