@@ -1,0 +1,10 @@
+{
+ "query": "CVE-2026-125350",
+ "fetched_at": "2026-11-09T23:00:43.488Z",
+ "providers": [
+  "hn",
+  "x"
+ ],
+ "failed": [],
+ "posts": []
+}
