@@ -2889,6 +2889,16 @@
    "certain": true,
    "name": "花キューピット",
    "incident": "news-15a3oxq"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/191650",
+   "date": "2026-11-10T14:22:36.000Z",
+   "leak": true,
+   "count": null,
+   "certain": true,
+   "name": null,
+   "incident": "news-p1tadd"
   }
  ]
 }
