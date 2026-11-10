@@ -2842,6 +2842,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/192572",
+   "date": "2026-11-10T01:47:21.000Z",
+   "leak": true,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1ppcsiz"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/192567",
    "date": "2026-11-10T02:03:47.000Z",
    "leak": false,
