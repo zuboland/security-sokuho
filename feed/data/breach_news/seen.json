@@ -3372,6 +3372,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/192730",
+   "date": "2026-11-12T00:47:39.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-vn5moz"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/192735",
    "date": "2026-11-12T01:22:42.000Z",
    "leak": false,
