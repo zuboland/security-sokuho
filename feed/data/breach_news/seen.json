@@ -3669,6 +3669,166 @@
    "certain": true,
    "name": null,
    "incident": "news-12e9mks"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56781.html",
+   "date": "2026-11-15T23:00:03.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-pbupsf"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56782.html",
+   "date": "2026-11-15T23:00:06.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1lc3914"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56783.html",
+   "date": "2026-11-15T23:00:09.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-130sqjp"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56784.html",
+   "date": "2026-11-15T23:00:12.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-8zfvly"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56785.html",
+   "date": "2026-11-15T23:05:02.000Z",
+   "leak": true,
+   "count": null,
+   "certain": true,
+   "name": null,
+   "incident": "news-1nnfxir"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56786.html",
+   "date": "2026-11-15T23:05:05.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1ivw3ik"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56787.html",
+   "date": "2026-11-15T23:05:07.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-9cu8ih"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56788.html",
+   "date": "2026-11-15T23:05:09.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1uy1j9m"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56789.html",
+   "date": "2026-11-15T23:05:13.000Z",
+   "leak": true,
+   "count": 7700000,
+   "certain": false,
+   "name": "アイリスプラザ",
+   "incident": "news-midvnr"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56790.html",
+   "date": "2026-11-15T23:05:16.000Z",
+   "leak": true,
+   "count": 14500,
+   "certain": true,
+   "name": "靖國神社オンライン授与品・頒布品サイト",
+   "incident": "news-mc3oo1"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56791.html",
+   "date": "2026-11-15T23:05:18.000Z",
+   "leak": true,
+   "count": 37000,
+   "certain": true,
+   "name": "ご契約者さま専用ページ",
+   "incident": "news-1wduvtg"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56792.html",
+   "date": "2026-11-15T23:05:22.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1csi3ff"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56793.html",
+   "date": "2026-11-15T23:05:24.000Z",
+   "leak": true,
+   "count": null,
+   "certain": false,
+   "name": "MyAXA",
+   "incident": "news-1aenojy"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56794.html",
+   "date": "2026-11-15T23:10:03.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-s4199p"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56795.html",
+   "date": "2026-11-15T23:15:03.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-eujpsw"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/16/56796.html",
+   "date": "2026-11-15T23:20:02.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1fykzb"
   }
  ]
 }
