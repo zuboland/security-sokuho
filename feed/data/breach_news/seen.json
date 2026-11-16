@@ -3862,6 +3862,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/192465",
+   "date": "2026-11-16T02:39:10.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-gl2iio"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/192887",
    "date": "2026-11-16T02:42:18.000Z",
    "leak": false,
