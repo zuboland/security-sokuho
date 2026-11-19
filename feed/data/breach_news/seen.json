@@ -4662,6 +4662,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/193020",
+   "date": "2026-11-19T13:04:04.000Z",
+   "leak": true,
+   "count": null,
+   "certain": true,
+   "name": null,
+   "incident": "news-1pi2312"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/193112",
    "date": "2026-11-19T14:54:38.000Z",
    "leak": false,
