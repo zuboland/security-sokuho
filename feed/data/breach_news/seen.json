@@ -4662,6 +4662,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/193088",
+   "date": "2026-11-19T12:28:50.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1suifyc"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/193020",
    "date": "2026-11-19T13:04:04.000Z",
    "leak": true,
