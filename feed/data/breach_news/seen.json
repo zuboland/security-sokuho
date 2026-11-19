@@ -4699,6 +4699,16 @@
    "certain": false,
    "name": null,
    "incident": "news-1jjwy0w"
+  },
+  {
+   "source": "scan",
+   "url": "https://scan.netsecurity.ne.jp/article/2026/11/20/56848.html",
+   "date": "2026-11-19T23:00:03.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-rv880a"
   }
  ]
 }
