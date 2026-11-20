@@ -2,46 +2,6 @@
  "items": [
   {
    "source": "scan",
-   "url": "https://scan.netsecurity.ne.jp/article/2026/10/22/56540.html",
-   "date": "2026-10-21T23:05:19.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-x1mq5u"
-  },
-  {
-   "source": "scan",
-   "url": "https://scan.netsecurity.ne.jp/article/2026/10/22/56541.html",
-   "date": "2026-10-21T23:05:21.000Z",
-   "leak": true,
-   "count": 9000000,
-   "certain": true,
-   "name": null,
-   "incident": "news-n0nlsf"
-  },
-  {
-   "source": "scan",
-   "url": "https://scan.netsecurity.ne.jp/article/2026/10/22/56542.html",
-   "date": "2026-10-21T23:05:23.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-1j0w514"
-  },
-  {
-   "source": "scan",
-   "url": "https://scan.netsecurity.ne.jp/article/2026/10/22/56543.html",
-   "date": "2026-10-21T23:05:25.000Z",
-   "leak": true,
-   "count": 4454097,
-   "certain": true,
-   "name": "ふるさとチョイス",
-   "incident": "news-10plmjp"
-  },
-  {
-   "source": "scan",
    "url": "https://scan.netsecurity.ne.jp/article/2026/10/23/56544.html",
    "date": "2026-10-22T23:00:03.000Z",
    "leak": false,
