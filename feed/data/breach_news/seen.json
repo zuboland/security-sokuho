@@ -4919,6 +4919,16 @@
    "certain": false,
    "name": null,
    "incident": "news-lowtee"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/193173",
+   "date": "2026-11-20T05:31:17.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-kashxl"
   }
  ]
 }
