@@ -2,56 +2,6 @@
  "items": [
   {
    "source": "scan",
-   "url": "https://scan.netsecurity.ne.jp/article/2026/10/23/56544.html",
-   "date": "2026-10-22T23:00:03.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-9vkudz"
-  },
-  {
-   "source": "scan",
-   "url": "https://scan.netsecurity.ne.jp/article/2026/10/23/56545.html",
-   "date": "2026-10-22T23:00:06.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-19p9iai"
-  },
-  {
-   "source": "scan",
-   "url": "https://scan.netsecurity.ne.jp/article/2026/10/23/56546.html",
-   "date": "2026-10-22T23:00:08.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-1bh5akt"
-  },
-  {
-   "source": "scan",
-   "url": "https://scan.netsecurity.ne.jp/article/2026/10/23/56547.html",
-   "date": "2026-10-22T23:00:12.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-rvpaf4"
-  },
-  {
-   "source": "scan",
-   "url": "https://scan.netsecurity.ne.jp/article/2026/10/23/56548.html",
-   "date": "2026-10-22T23:00:15.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-golkhv"
-  },
-  {
-   "source": "scan",
    "url": "https://scan.netsecurity.ne.jp/article/2026/10/23/56549.html",
    "date": "2026-10-22T23:05:03.000Z",
    "leak": true,
