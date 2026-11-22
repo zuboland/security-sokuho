@@ -1,16 +1,6 @@
 {
  "items": [
   {
-   "source": "snext",
-   "url": "https://www.security-next.com/191821",
-   "date": "2026-10-22T23:50:59.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-1ormubj"
-  },
-  {
    "source": "scan",
    "url": "https://scan.netsecurity.ne.jp/article/2026/10/26/56558.html",
    "date": "2026-10-25T23:00:03.000Z",
