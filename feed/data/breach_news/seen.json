@@ -5022,6 +5022,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/192864",
+   "date": "2026-11-24T11:15:33.000Z",
+   "leak": true,
+   "count": null,
+   "certain": true,
+   "name": null,
+   "incident": "news-71r1sn"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/193248",
    "date": "2026-11-24T11:40:19.000Z",
    "leak": false,
@@ -5029,6 +5039,16 @@
    "certain": false,
    "name": null,
    "incident": "news-hs945i"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/193086",
+   "date": "2026-11-24T14:23:49.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1q2mf0m"
   }
  ]
 }
