@@ -4959,6 +4959,36 @@
    "certain": false,
    "name": null,
    "incident": "news-sfqqgd"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/193208",
+   "date": "2026-11-23T23:15:16.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1jic8w2"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/193210",
+   "date": "2026-11-24T00:32:42.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1eimjwj"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/193218",
+   "date": "2026-11-24T00:43:31.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1gqjdgb"
   }
  ]
 }
