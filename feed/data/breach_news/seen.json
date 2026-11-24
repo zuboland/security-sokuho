@@ -2,36 +2,6 @@
  "items": [
   {
    "source": "scan",
-   "url": "https://scan.netsecurity.ne.jp/article/2026/10/26/56558.html",
-   "date": "2026-10-25T23:00:03.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-kqkvul"
-  },
-  {
-   "source": "scan",
-   "url": "https://scan.netsecurity.ne.jp/article/2026/10/26/56559.html",
-   "date": "2026-10-25T23:00:08.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-1y2e31s"
-  },
-  {
-   "source": "scan",
-   "url": "https://scan.netsecurity.ne.jp/article/2026/10/26/56560.html",
-   "date": "2026-10-25T23:00:10.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-1rrhp5g"
-  },
-  {
-   "source": "scan",
    "url": "https://scan.netsecurity.ne.jp/article/2026/10/26/56561.html",
    "date": "2026-10-25T23:05:02.000Z",
    "leak": true,
