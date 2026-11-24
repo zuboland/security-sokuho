@@ -5002,6 +5002,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/192872",
+   "date": "2026-11-24T03:51:43.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-3psnz0"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/193221",
    "date": "2026-11-24T04:42:27.000Z",
    "leak": false,
