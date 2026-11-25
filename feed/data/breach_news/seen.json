@@ -2,16 +2,6 @@
  "items": [
   {
    "source": "snext",
-   "url": "https://www.security-next.com/191931",
-   "date": "2026-10-26T02:58:55.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-1kra2h1"
-  },
-  {
-   "source": "snext",
    "url": "https://www.security-next.com/191783",
    "date": "2026-10-26T10:41:14.000Z",
    "leak": false,
