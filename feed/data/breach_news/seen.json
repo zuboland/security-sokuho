@@ -2,26 +2,6 @@
  "items": [
   {
    "source": "snext",
-   "url": "https://www.security-next.com/191783",
-   "date": "2026-10-26T10:41:14.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-gxyziq"
-  },
-  {
-   "source": "snext",
-   "url": "https://www.security-next.com/191902",
-   "date": "2026-10-26T10:59:40.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-1i9ahqb"
-  },
-  {
-   "source": "snext",
    "url": "https://www.security-next.com/191495",
    "date": "2026-10-26T11:35:29.000Z",
    "leak": false,
