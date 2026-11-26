@@ -4952,6 +4952,16 @@
   },
   {
    "source": "snext",
+   "url": "https://www.security-next.com/192812",
+   "date": "2026-11-26T02:30:37.000Z",
+   "leak": true,
+   "count": null,
+   "certain": true,
+   "name": null,
+   "incident": "news-85sm2i"
+  },
+  {
+   "source": "snext",
    "url": "https://www.security-next.com/193385",
    "date": "2026-11-26T12:40:03.000Z",
    "leak": false,
