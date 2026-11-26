@@ -2,26 +2,6 @@
  "items": [
   {
    "source": "snext",
-   "url": "https://www.security-next.com/191915",
-   "date": "2026-10-27T08:31:13.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-1ij6xxb"
-  },
-  {
-   "source": "snext",
-   "url": "https://www.security-next.com/191994",
-   "date": "2026-10-27T08:47:36.000Z",
-   "leak": true,
-   "count": null,
-   "certain": false,
-   "name": "一番くじONLINE",
-   "incident": "news-1mpsexg"
-  },
-  {
-   "source": "snext",
    "url": "https://www.security-next.com/192029",
    "date": "2026-10-27T14:34:08.000Z",
    "leak": true,
