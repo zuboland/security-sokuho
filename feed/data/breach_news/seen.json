@@ -4959,6 +4959,16 @@
    "certain": false,
    "name": null,
    "incident": "news-druw07"
+  },
+  {
+   "source": "snext",
+   "url": "https://www.security-next.com/193385",
+   "date": "2026-11-26T12:40:03.000Z",
+   "leak": false,
+   "count": null,
+   "certain": false,
+   "name": null,
+   "incident": "news-1fhmcn2"
   }
  ]
 }
