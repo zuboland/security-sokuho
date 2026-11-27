@@ -1,26 +1,6 @@
 {
  "items": [
   {
-   "source": "snext",
-   "url": "https://www.security-next.com/191655",
-   "date": "2026-10-28T14:38:54.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-pvs3ga"
-  },
-  {
-   "source": "snext",
-   "url": "https://www.security-next.com/191989",
-   "date": "2026-10-28T14:40:59.000Z",
-   "leak": true,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-1kryckm"
-  },
-  {
    "source": "scan",
    "url": "https://scan.netsecurity.ne.jp/article/2026/10/29/56612.html",
    "date": "2026-10-28T23:00:03.000Z",
