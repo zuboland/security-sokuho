@@ -2,16 +2,6 @@
  "items": [
   {
    "source": "snext",
-   "url": "https://www.security-next.com/192097",
-   "date": "2026-10-29T05:18:47.000Z",
-   "leak": false,
-   "count": null,
-   "certain": false,
-   "name": null,
-   "incident": "news-cbqfl"
-  },
-  {
-   "source": "snext",
    "url": "https://www.security-next.com/192167",
    "date": "2026-10-29T12:43:18.000Z",
    "leak": false,
